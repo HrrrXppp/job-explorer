@@ -216,3 +216,7 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# Local secrets (never commit)
+.github_token
+.gmail_token.json
