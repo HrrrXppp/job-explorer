@@ -19,7 +19,7 @@ come only from the last Gmail report.
 
 ## Constraints (must not violate)
 
-- Search sources and resumes live in `config.json` (committed example only).
+- Search sources live in `config.json`. Secrets stay in environment variables.
 - Secrets live in environment variables, never in `config.json` or git.
 - Resumes are `.docx` files on disk; paths are listed in `config.json`.
 - Matching uses a **local** `sentence-transformers` model (default
@@ -29,7 +29,12 @@ come only from the last Gmail report.
 - Sources are HTTP request lists; each source has rules for extracting items
   and building follow-up detail requests. See
   [job-explorer-http-crawler](../job-explorer-http-crawler/SKILL.md).
+- `config.json` `user_agent` is set **once** and applied to every HTTP request
+  (search and detail). Use it to advertise the operator. Do not repeat
+  User-Agent on each source unless that source must override it.
 - Behavior is covered by **pytest**. No live network or live Gmail in CI.
+- Use **Pydantic** models everywhere (config, crawl results, email state).
+  Do not introduce dataclasses unless the user asks for maximum performance.
 
 ## Pipeline
 
@@ -59,8 +64,10 @@ Then reuse the last email’s title, url, source id, and scores for the
 resume added, removed, or file bytes changed; last state missing fingerprints
 or the cached row for that id.
 
-If `description.kind` is `field` (no `detail_request`), there is no extra HTTP
-for anyone — description comes from the search payload.
+If `detail_request` is omitted, there is no extra HTTP — description comes
+from `items.fields.description` on the search payload. When a detail request
+is present, `description` is the field path (JSONPath or CSS) on that
+response.
 
 CLI entry: `python -m job_explorer` (optional `--config path`).
 
@@ -70,14 +77,14 @@ CLI entry: `python -m job_explorer` (optional `--config path`).
 src/job_explorer/
   cli.py           # argparse, orchestration only
   config.py        # load/validate config.json; ${ENV} interpolation in headers
-  models.py        # Position, Resume, Match, RunState dataclasses
-  crawler.py       # execute search + detail requests
-  extract.py       # apply per-source field/rules to HTTP bodies
+  models.py        # Pydantic models (not dataclasses unless asked for max performance)
+  crawler.py       # async search + detail HTTP and field extract
   matching.py      # docx text + sentence-transformers scores
-  gmail_client.py  # OAuth, fetch last state, send message
+  gmail_client.py  # fetch last state, send message
   report.py        # HTML body + state JSON payload
   state.py         # encode/decode fingerprints + cached positions/scores
 tests/
+config.json
 config.example.json
 pyproject.toml
 ```

@@ -26,8 +26,8 @@ Scopes: `https://www.googleapis.com/auth/gmail.send` and
 `https://www.googleapis.com/auth/gmail.readonly`.
 
 Use `google-auth` + `google-api-python-client`. Refresh access tokens in
-memory; do not write token files into the repo. Optional local helper path
-via `GMAIL_TOKEN_FILE` is allowed only if gitignored.
+memory; do not write token files into the repo. Do not add an interactive
+OAuth helper that prints the refresh token.
 
 `config.json` may set `email.to` (list). Default to `GMAIL_USER`.
 
@@ -38,7 +38,9 @@ via `GMAIL_TOKEN_FILE` is allowed only if gitignored.
    `maxResults=1`, `userId=me`.
 2. If zero messages: previous set is empty (all positions are **new**).
 3. `users.messages.get` `format=full`; find MIME part
-   `filename=job-explorer-state.json` (or `application/json` with that name).
+   `filename=job-explorer-state.json` (or `Content-Disposition` filename).
+   If `body.data` is missing, download with `messages.attachments.get`
+   using `body.attachmentId` (Gmail omits inline data for larger parts).
 4. Base64url-decode JSON (**version 2**):
 
 ```json
