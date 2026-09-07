@@ -1,13 +1,18 @@
 {
   "user_agent": "It's Evgenii Khrunov. I'm opened for new position. You can email me hrrrxppp@gmail.com. My Linkedin account is www.linkedin.com/in/evgeniy-khrunov",
   "resumes": [
-    { "id": "primary", "path": "/home/ekhrunov/Downloads/Khrunov_Evgenii_Resume (7).docx" }
+    {
+      "id": "primary",
+      "path": "/home/ekhrunov/Downloads/Khrunov_Evgenii_Resume (7).docx"
+    }
   ],
   "matching": {
     "model": "sentence-transformers/all-MiniLM-L6-v2"
   },
   "email": {
-    "to": ["hrrrxppp@gmail.com"]
+    "to": [
+      "hrrrxppp@gmail.com"
+    ]
   },
   "sources": [
     {
@@ -21,7 +26,7 @@
         "query": {
           "onlyData": "true",
           "expand": "requisitionList.workLocation,requisitionList.otherWorkLocations,requisitionList.secondaryLocations,flexFieldsFacet.values,requisitionList.requisitionFlexFields",
-          "finder": "findReqs;siteNumber=CX_1001,facetsList=LOCATIONS;WORK_LOCATIONS;WORKPLACE_TYPES;TITLES;CATEGORIES;ORGANIZATIONS;POSTING_DATES;FLEX_FIELDS,limit=25,keyword=Python,locationId=300000020683471,radius=25,radiusUnit=MI,sortBy=RELEVANCY"
+          "finder": "findReqs;siteNumber=CX_1001,facetsList=LOCATIONS;WORK_LOCATIONS;WORKPLACE_TYPES;TITLES;CATEGORIES;ORGANIZATIONS;POSTING_DATES;FLEX_FIELDS,limit=25,keyword=Python,locationId=300000020683471,radius=50,radiusUnit=MI,sortBy=RELEVANCY"
         }
       },
       "items": {
@@ -37,13 +42,425 @@
       "detail_request": {
         "method": "GET",
         "url": "https://jpmc.fa.oraclecloud.com/hcmRestApi/resources/latest/recruitingCEJobRequisitionDetails",
-        "headers": { "Accept": "application/json" },
+        "headers": {
+          "Accept": "application/json"
+        },
         "query": {
           "expand": "all",
           "onlyData": "true",
           "finder": "ById;Id={id},siteNumber=CX_1001"
         },
         "description": "$.items[0].ExternalDescriptionStr"
+      }
+    },
+    {
+      "id": "akamai",
+      "search_request": {
+        "method": "GET",
+        "url": "https://fa-extu-saasfaprod1.fa.ocs.oraclecloud.com/hcmRestApi/resources/latest/recruitingCEJobRequisitions",
+        "headers": {
+          "Accept": "application/json"
+        },
+        "query": {
+          "onlyData": "true",
+          "expand": "requisitionList.workLocation,requisitionList.otherWorkLocations,requisitionList.secondaryLocations,flexFieldsFacet.values,requisitionList.requisitionFlexFields",
+          "finder": "findReqs;siteNumber=CX_1,facetsList=LOCATIONS;WORK_LOCATIONS;WORKPLACE_TYPES;TITLES;CATEGORIES;ORGANIZATIONS;POSTING_DATES;FLEX_FIELDS,limit=25,keyword=Python,latitude=39.7876,longitude=-75.6966,radius=50,radiusUnit=MI,sortBy=RELEVANCY"
+        }
+      },
+      "items": {
+        "kind": "json",
+        "list": "$.items[0].requisitionList",
+        "fields": {
+          "id": "Id",
+          "title": "Title",
+          "description": "ShortDescriptionStr"
+        },
+        "url_template": "https://fa-extu-saasfaprod1.fa.ocs.oraclecloud.com/hcmUI/CandidateExperience/en/sites/CX_1/job/{id}"
+      },
+      "detail_request": {
+        "method": "GET",
+        "url": "https://fa-extu-saasfaprod1.fa.ocs.oraclecloud.com/hcmRestApi/resources/latest/recruitingCEJobRequisitionDetails",
+        "headers": {
+          "Accept": "application/json"
+        },
+        "query": {
+          "expand": "all",
+          "onlyData": "true",
+          "finder": "ById;Id={id},siteNumber=CX_1"
+        },
+        "description": "$.items[0].ExternalDescriptionStr"
+      }
+    },
+    {
+      "id": "bofa",
+      "search_request": {
+        "method": "POST",
+        "url": "https://ghr.wd1.myworkdayjobs.com/wday/cxs/ghr/Lateral-US/jobs",
+        "headers": {
+          "Accept": "application/json"
+        },
+        "body": {
+          "appliedFacets": {
+            "locations": [
+              "13a0897a1ccc1039068aa49a1f86fe0c",
+              "13a0897a1ccc1039073aaa29ad9d8283",
+              "13a0897a1ccc103909f346c68d00b9f7",
+              "13a0897a1ccc10390a376c7d9174bd15",
+              "13a0897a1ccc103908de38b1df1ba6a6",
+              "13a0897a1ccc103908c2322b2993a53b",
+              "13a0897a1ccc103909f341e87a01b993",
+              "13a0897a1ccc103908a6ef066bf5a324",
+              "13a0897a1ccc10390872120a5ea99fe1",
+              "13a0897a1ccc103909f3412b3b29b984",
+              "c7cb9d47d81c1002043d4f6bf2e80000",
+              "748a7b89697c01c337b29bf84c853ef5",
+              "de79dcd28d5f01373a38d3baf320b923",
+              "13a0897a1ccc10390871fed6faab9e5b",
+              "13a0897a1ccc10390a7d5382f5cec637",
+              "13a0897a1ccc10390a3778884ae7be0a",
+              "13a0897a1ccc10390a377809c075be00",
+              "13a0897a1ccc10390a3777cb3c1bbdfb",
+              "13a0897a1ccc10390a37770f3419bdec",
+              "13a0897a1ccc10390a1566278321bbe4",
+              "13a0897a1ccc1039068aa45d4333fe07",
+              "13a0897a1ccc103909f348b9cdc7ba1f",
+              "13a0897a1ccc103909f3474320c8ba01",
+              "13a0897a1ccc103908de45a3958aa7a0",
+              "13a0897a1ccc103909f33b563066b90c",
+              "13a0897a1ccc1039088c388ebbeca121",
+              "13a0897a1ccc1039068aa03a855efdb2",
+              "13a0897a1ccc1039068a9fbbe9f0fda8",
+              "13a0897a1ccc1039068aa1ef73e4fdd5",
+              "e951305e72fd01657afc36c6dd2119f9",
+              "13a0897a1ccc1039068aa2a8cbb6fde4",
+              "13a0897a1ccc1039068aa0bb55fefdbc",
+              "13a0897a1ccc1039068aa07d95eefdb7",
+              "13a0897a1ccc1039068aa22d2437fdda",
+              "13a0897a1ccc1039063b9fa26327eb5f",
+              "f5f930d373f4100480a627e05cde0000",
+              "13a0897a1ccc103909f3416ab875b989",
+              "13a0897a1ccc103909f33ebc943bb952",
+              "13a0897a1ccc103909f33ff42a46b96b",
+              "13a0897a1ccc103909f34704b3b0b9fc",
+              "13a0897a1ccc103909f344d37a74b9cf",
+              "13a0897a1ccc103909f343da2cc1b9bb",
+              "13a0897a1ccc103909f33b9456b0b911",
+              "a3f461e1418d100512daeb069abe0000",
+              "884ef6306b9801dd34f1b0e5a420bf70",
+              "2f2dd0bfe61e013fba60ee8e8c021cb6",
+              "13a0897a1ccc103909f3483d909eba15",
+              "13a0897a1ccc103909f347ffc855ba10",
+              "13a0897a1ccc103909f33d483dfab934",
+              "297cb23af9a2019436d3448eaa4a7b79",
+              "13a0897a1ccc10390b8d7305ba3f628b",
+              "13a0897a1ccc10390b8d718cb0d56272",
+              "13a0897a1ccc1039083f511355d49a4d",
+              "13a0897a1ccc10390826dbedb82c9921",
+              "13a0897a1ccc10390826dbac21cf991c",
+              "13a0897a1ccc10390826db6db89f9917",
+              "13a0897a1ccc10390826db2f940f9912",
+              "13a0897a1ccc1039079d2b4c64158bd3",
+              "13a0897a1ccc1039079d28fc092e8ba6",
+              "13a0897a1ccc1039079d27c3c38b8b8d",
+              "13a0897a1ccc1039074ce9cc110583d7",
+              "13a0897a1ccc103908de39ec28daa6bf",
+              "13a0897a1ccc10390a155cd8deb5bb2b",
+              "13a0897a1ccc103909f344569d3fb9c5",
+              "13a0897a1ccc1039088c35cea94da0ea",
+              "241cd06b73fc01ceac46296c63692b2f",
+              "884ef6306b980175e74b7807a620707a",
+              "debbf647368701cb71070aee0a094e30",
+              "2fcbf0f85bda0138a5b033b2e067be61",
+              "d4983d545d5f100f5b2e0d1f58c98d2b",
+              "13a0897a1ccc103907739a749e9687ec",
+              "13a0897a1ccc1039068aa41d7fd9fe02",
+              "e8a996acdaf4015e4c8903aa41355ab6",
+              "13a0897a1ccc10390872052f195b9edd",
+              "13a0897a1ccc1039087204f09e239ed8"
+            ]
+          },
+          "limit": 20,
+          "offset": 0,
+          "searchText": "Python"
+        }
+      },
+      "items": {
+        "kind": "json",
+        "list": "$.jobPostings",
+        "fields": {
+          "id": "bulletFields[0]",
+          "title": "title",
+          "externalPath": "externalPath"
+        },
+        "url_template": "https://ghr.wd1.myworkdayjobs.com/en-US/Lateral-US{externalPath}"
+      },
+      "detail_request": {
+        "method": "GET",
+        "url": "https://ghr.wd1.myworkdayjobs.com/wday/cxs/ghr/Lateral-US{externalPath}",
+        "headers": {
+          "Accept": "application/json"
+        },
+        "description": "$.jobPostingInfo.jobDescription"
+      }
+    },
+    {
+      "id": "barclays",
+      "search_request": {
+        "method": "POST",
+        "url": "https://barclays.wd3.myworkdayjobs.com/wday/cxs/barclays/External_Career_Site_Barclays/jobs",
+        "headers": {
+          "Accept": "application/json"
+        },
+        "body": {
+          "appliedFacets": {
+            "locations": [
+              "1ab48a98eb7c10016346632ee73f0000"
+            ]
+          },
+          "limit": 20,
+          "offset": 0,
+          "searchText": "Python"
+        }
+      },
+      "items": {
+        "kind": "json",
+        "list": "$.jobPostings",
+        "fields": {
+          "id": "bulletFields[0]",
+          "title": "title",
+          "externalPath": "externalPath"
+        },
+        "url_template": "https://barclays.wd3.myworkdayjobs.com/en-US/External_Career_Site_Barclays{externalPath}"
+      },
+      "detail_request": {
+        "method": "GET",
+        "url": "https://barclays.wd3.myworkdayjobs.com/wday/cxs/barclays/External_Career_Site_Barclays{externalPath}",
+        "headers": {
+          "Accept": "application/json"
+        },
+        "description": "$.jobPostingInfo.jobDescription"
+      }
+    },
+    {
+      "id": "capitalone",
+      "search_request": {
+        "method": "POST",
+        "url": "https://capitalone.wd12.myworkdayjobs.com/wday/cxs/capitalone/Capital_One/jobs",
+        "headers": {
+          "Accept": "application/json"
+        },
+        "body": {
+          "appliedFacets": {
+            "locations": [
+              "5303cb0ddb47102d5fab37f344110944",
+              "5303cb0ddb47102d5f9f1cd4406100f1",
+              "3b0d3024e0af103d6c207868de1b103b",
+              "3b0d3024e0af103d6c20c31f5c8010b8",
+              "442eec3ef173100113a3990839e00000"
+            ]
+          },
+          "limit": 20,
+          "offset": 0,
+          "searchText": "Python"
+        }
+      },
+      "items": {
+        "kind": "json",
+        "list": "$.jobPostings",
+        "fields": {
+          "id": "bulletFields[0]",
+          "title": "title",
+          "externalPath": "externalPath"
+        },
+        "url_template": "https://capitalone.wd12.myworkdayjobs.com/en-US/Capital_One{externalPath}"
+      },
+      "detail_request": {
+        "method": "GET",
+        "url": "https://capitalone.wd12.myworkdayjobs.com/wday/cxs/capitalone/Capital_One{externalPath}",
+        "headers": {
+          "Accept": "application/json"
+        },
+        "description": "$.jobPostingInfo.jobDescription"
+      }
+    },
+    {
+      "id": "citi",
+      "search_request": {
+        "method": "POST",
+        "url": "https://citi.wd5.myworkdayjobs.com/wday/cxs/citi/2/jobs",
+        "headers": {
+          "Accept": "application/json"
+        },
+        "body": {
+          "appliedFacets": {
+            "locations": [
+              "8a1ca13f3b4601a5fe7f9af8ad21df94",
+              "6669335a15de01888ede7e236100378e",
+              "6669335a15de0125ebb373236100fb8d",
+              "8a1ca13f3b4601968f533bd1ad21cc32",
+              "6669335a15de015527adad296100f4a8"
+            ]
+          },
+          "limit": 20,
+          "offset": 0,
+          "searchText": "Python"
+        }
+      },
+      "items": {
+        "kind": "json",
+        "list": "$.jobPostings",
+        "fields": {
+          "id": "bulletFields[0]",
+          "title": "title",
+          "externalPath": "externalPath"
+        },
+        "url_template": "https://citi.wd5.myworkdayjobs.com/en-US/2{externalPath}"
+      },
+      "detail_request": {
+        "method": "GET",
+        "url": "https://citi.wd5.myworkdayjobs.com/wday/cxs/citi/2{externalPath}",
+        "headers": {
+          "Accept": "application/json"
+        },
+        "description": "$.jobPostingInfo.jobDescription"
+      }
+    },
+    {
+      "id": "astrazeneca",
+      "search_request": {
+        "method": "POST",
+        "url": "https://astrazeneca.wd3.myworkdayjobs.com/wday/cxs/astrazeneca/Careers/jobs",
+        "headers": {
+          "Accept": "application/json"
+        },
+        "body": {
+          "appliedFacets": {
+            "locations": [
+              "b914f96b1779102cc97453963e19b2a7",
+              "567b3426fd960124eeba0dbd8d37a05f"
+            ]
+          },
+          "limit": 20,
+          "offset": 0,
+          "searchText": "Python"
+        }
+      },
+      "items": {
+        "kind": "json",
+        "list": "$.jobPostings",
+        "fields": {
+          "id": "bulletFields[0]",
+          "title": "title",
+          "externalPath": "externalPath"
+        },
+        "url_template": "https://astrazeneca.wd3.myworkdayjobs.com/en-US/Careers{externalPath}"
+      },
+      "detail_request": {
+        "method": "GET",
+        "url": "https://astrazeneca.wd3.myworkdayjobs.com/wday/cxs/astrazeneca/Careers{externalPath}",
+        "headers": {
+          "Accept": "application/json"
+        },
+        "description": "$.jobPostingInfo.jobDescription"
+      }
+    },
+    {
+      "id": "incyte",
+      "search_request": {
+        "method": "GET",
+        "url": "https://careers.incyte.com/api/jobs",
+        "headers": {
+          "Accept": "application/json"
+        },
+        "query": {
+          "q": "Python",
+          "state": "Delaware",
+          "limit": "50"
+        }
+      },
+      "items": {
+        "kind": "json",
+        "list": "$.jobs",
+        "fields": {
+          "id": "data.slug",
+          "title": "data.title",
+          "description": "data.description"
+        },
+        "url_template": "https://careers.incyte.com/jobs/{id}"
+      }
+    },
+    {
+      "id": "incyte_chadds",
+      "search_request": {
+        "method": "GET",
+        "url": "https://careers.incyte.com/api/jobs",
+        "headers": {
+          "Accept": "application/json"
+        },
+        "query": {
+          "q": "Python",
+          "city": "Chadds Ford",
+          "state": "Pennsylvania",
+          "limit": "50"
+        }
+      },
+      "items": {
+        "kind": "json",
+        "list": "$.jobs",
+        "fields": {
+          "id": "data.slug",
+          "title": "data.title",
+          "description": "data.description"
+        },
+        "url_template": "https://careers.incyte.com/jobs/{id}"
+      }
+    },
+    {
+      "id": "mtb",
+      "search_request": {
+        "method": "POST",
+        "url": "https://mtb.wd5.myworkdayjobs.com/wday/cxs/mtb/MTB/jobs",
+        "headers": {
+          "Accept": "application/json"
+        },
+        "body": {
+          "appliedFacets": {
+            "locations": [
+              "f0806ab07a84010198cd61b20dc90000",
+              "5c9fab6ddae8010198b5dee18fd20000",
+              "f0806ab07a84010198ae147ed6280000",
+              "5c9fab6ddae8010198b58e884dca0000",
+              "5c9fab6ddae8010198b7deef0a6e0000",
+              "c039dd6f9c54010198130aae17b90000",
+              "5c9fab6ddae80101992d8ddd527a0000",
+              "f0806ab07a840101992426328d8f0000",
+              "f0806ab07a84010198fc22fdf8a00000",
+              "5c9fab6ddae8010198b5a918945e0000",
+              "0765fb7811f201de30493c5c3110c352"
+            ]
+          },
+          "limit": 20,
+          "offset": 0,
+          "searchText": "Python"
+        }
+      },
+      "items": {
+        "kind": "json",
+        "list": "$.jobPostings",
+        "fields": {
+          "id": "bulletFields[0]",
+          "title": "title",
+          "externalPath": "externalPath"
+        },
+        "url_template": "https://mtb.wd5.myworkdayjobs.com/en-US/MTB{externalPath}"
+      },
+      "detail_request": {
+        "method": "GET",
+        "url": "https://mtb.wd5.myworkdayjobs.com/wday/cxs/mtb/MTB{externalPath}",
+        "headers": {
+          "Accept": "application/json"
+        },
+        "description": "$.jobPostingInfo.jobDescription"
       }
     }
   ]
