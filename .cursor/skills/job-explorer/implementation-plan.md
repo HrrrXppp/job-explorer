@@ -10,6 +10,7 @@ Decisions locked from discussion:
 - Mail: **Gmail API**, user OAuth (**client id/secret + refresh token** in env).
 - Stateless: previous positions and resume fingerprints come from the **last email**, not disk.
 - **Skip detail HTTP** for old items when resumes are unchanged ([comment](https://github.com/HrrrXppp/job-explorer/issues/1#issuecomment-5488073881)).
+- **User-Agent** is configured once in `config.json` and applied to all HTTP requests ([comment](https://github.com/HrrrXppp/job-explorer/issues/1#issuecomment-5535027740)).
 
 ## 1. Goal
 
@@ -28,6 +29,7 @@ No database, no `seen.json`, no cache of prior runs.
 
 ```
 pyproject.toml
+config.json
 config.example.json
 src/job_explorer/
   __init__.py
@@ -35,7 +37,6 @@ src/job_explorer/
   config.py
   models.py
   crawler.py
-  extract.py
   matching.py
   gmail_client.py
   report.py
@@ -44,7 +45,6 @@ tests/
   conftest.py
   fixtures/          # sample JSON/HTML/docx
   test_config.py
-  test_extract.py
   test_crawler.py
   test_matching.py
   test_state.py
@@ -53,7 +53,7 @@ tests/
   test_cli.py
 ```
 
-Package install: `pip install -e ".[dev]"`. Entry: `python -m job_explorer` / console script `job-explorer`.
+Package install: `uv sync --extra dev`. Entry: `python -m job_explorer` / console script `job-explorer`.
 
 Python **3.11+**. License remains Apache-2.0.
 
@@ -63,6 +63,7 @@ Python **3.11+**. License remains Apache-2.0.
 
 ```json
 {
+  "user_agent": "Your Name (you@example.com) — open to backend roles",
   "resumes": [
     { "id": "primary", "path": "resumes/primary.docx" }
   ],
@@ -97,10 +98,7 @@ Python **3.11+**. License remains Apache-2.0.
         "method": "GET",
         "url": "https://example.com/jobs/{id}",
         "headers": { "Accept": "application/json" },
-        "description": {
-          "kind": "json",
-          "path": "$.description"
-        }
+        "description": "$.description"
       }
     }
   ]
@@ -109,13 +107,19 @@ Python **3.11+**. License remains Apache-2.0.
 
 - `${ENV_VAR}` interpolation in request strings; missing vars fail at load.
 - Position id = `{source.id}:{item.id}`.
-- `items.kind`: `json` (JSONPath) or `html` (CSS selector + optional `attr`).
+- `items.kind`: `json` (JSONPath) or `html` (CSS selector). Field values are
+  strings; HTML may use `selector@attr`. `fields.id` names the item id field.
 - `detail_request` URL/headers/query/body templates substitute `{id}` and other extracted fields.
-- `description.kind`: `json` | `html` | `regex` | `field` (use search-payload field, skip extra HTTP).
-- Optional `pagination`: `page_query` with `param`, `start`, `max_pages`.
+- `detail_request.description`: field path on the detail body (JSONPath or CSS).
+- No pagination object — the search request includes any max-items parameter.
 - Optional `max_detail_requests` per source (default 100).
+- `user_agent`: single string used as the HTTP `User-Agent` on every search
+  and detail request (self-advertising). Per-source headers may
+  override `User-Agent` for that request only.
+- Models are **Pydantic** (not dataclasses) unless the user asks for maximum performance.
+- Package and lock with **uv** (`uv.lock` committed).
 
-Commit only `config.example.json`. Real `config.json` and resume files stay local / gitignored if they contain private paths.
+Commit `config.json` when it has no secrets (Gmail/API keys stay in `.env`). Resume files stay local / gitignored.
 
 ### 3.2 Environment variables (secrets)
 
@@ -145,7 +149,7 @@ validate config + env
 → send multipart Gmail: HTML + state v2 (current fingerprints + all this-run positions)
 ```
 
-HTTP client: `httpx`. Retries: 3×, backoff, only 429/5xx. Cap detail requests. One item parse failure logs and continues.
+HTTP client: `httpx.AsyncClient`. `@retry_http` only retries; the request function decides what is retryable (429/5xx). Cap detail requests. One item parse failure logs and continues. Duplicate ids log a warning.
 
 ### 4.1 Skip detail (old item + old resumes)
 
@@ -193,17 +197,16 @@ First run (no prior mail) → all positions **new**. Corrupt attachment → warn
 
 ## 7. Dependencies (`pyproject.toml`)
 
-Runtime: `httpx`, `jsonpath-ng`, `selectolax` or `beautifulsoup4`, `python-docx`, `sentence-transformers`, `google-api-python-client`, `google-auth`, `google-auth-oauthlib`.
+Runtime: `httpx`, `jsonpath-ng`, `beautifulsoup4`, `python-docx`, `sentence-transformers`, `google-api-python-client`, `google-auth`, `pydantic`.
 
-Dev: `pytest`, `respx` or `pytest-httpx`, `pytest-cov`.
+Dev: `pytest`, `pytest-asyncio`, `respx` or `pytest-httpx`, `pytest-cov`.
 
 ## 8. Test plan (pytest)
 
 | Area | What to prove |
 |------|----------------|
 | config | valid example loads; missing `${VAR}` errors; schema errors |
-| extract | JSONPath + CSS fixtures → ids/titles/urls/descriptions |
-| crawler | search then exact detail URLs; **no** detail call for `skip_detail_ids`; pagination stop on empty page; 5xx retry; cap |
+| crawler | JSONPath + CSS fixtures; search then exact detail URLs; **no** detail call for `skip_detail_ids`; 5xx retry decorator; cap; duplicate-id warning |
 | matching | fake encoder vectors → known percents; docx text extract; empty description → 0.0; file SHA-256 fingerprint |
 | state | JSON v2 round-trip; v1 compat (no skip); new vs previous split; fingerprint equality |
 | report | both headings; order by %; attachment name |
@@ -233,5 +236,5 @@ No live Gmail or live job HTTP in default CI.
 ## 11. Open items (do not block this plan)
 
 - Exact list of production sources (each is a `sources[]` entry when implementing).
-- Whether `email.to` is a list in config or always `GMAIL_USER` only.
+- Whether `email.to` is a list in config or always `GMAIL_USER` only — both supported (`email.to` optional; default `GMAIL_USER`).
 - CI: cache HF model vs mock-only (default mock-only).

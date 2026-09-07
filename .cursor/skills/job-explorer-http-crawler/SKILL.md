@@ -3,7 +3,7 @@ name: job-explorer-http-crawler
 description: >-
   Defines config.json HTTP request lists and per-source extract/detail rules
   for job-explorer. Use when adding sources, search/detail requests, JSONPath
-  or CSS extract fields, pagination, or crawler tests.
+  or CSS extract fields, or crawler tests.
 ---
 
 # HTTP crawler (config-driven)
@@ -44,10 +44,7 @@ Each element of `config.json` `"sources"`:
     "headers": {"Accept": "application/json"},
     "query": {},
     "body": null,
-    "description": {
-      "kind": "json",
-      "path": "$.description"
-    }
+    "description": "$.description"
   }
 }
 ```
@@ -61,8 +58,11 @@ Position identity: `{source_id}:{item.id}` (string). Required extract field:
 - `url`, optional `headers`, `query`, `body` (object → JSON, string → raw).
 - Interpolate `{field}` only on **detail** requests (from the item). Search
   requests interpolate `${ENV}` only.
-- Execute with `httpx.Client` (timeout, follow redirects off unless
-  `follow_redirects: true`).
+- Execute with `httpx.AsyncClient` (timeout, follow redirects off unless
+  `follow_redirects: true`). Search sources and detail requests run concurrently.
+- Default `User-Agent` comes from top-level `config.json` `"user_agent"`
+  (one value for every request). Per-request `headers["User-Agent"]` overrides
+  that default for that request only.
 
 ## Item extract (`items`)
 
@@ -77,8 +77,15 @@ Position identity: `{source_id}:{item.id}` (string). Required extract field:
 **html**
 
 - `list`: CSS selector for each job card.
-- `fields`: output name → `{ "selector": "...", "attr": "href" | "text" }`.
-  `attr` default `text`. Resolve relative URLs against the search URL.
+- `fields`: output name → CSS selector string. Optional `@attr` suffix
+  (`a.title@href`, `a.title@data-id`). Default attr is `text`.
+  Resolve relative URLs against the search URL.
+
+`fields.id` is required: the operator names which field is the item id.
+
+Optional `url_template` is filled from extracted fields (`{id}`, `{title}`, …)
+when the search payload has no job URL. Example:
+`https://careers.example.com/jobs/{id}`.
 
 Skip items missing `id`. Log and continue on a single item parse error.
 
@@ -87,37 +94,22 @@ Skip items missing `id`. Log and continue on a single item parse error.
 Templates in `url`, `headers`, `query`, and `body` substitute `{id}`,
 `{title}`, `{url}`, and any extra `fields` keys.
 
-`description` after the detail response:
-
-| kind | rule |
-|------|------|
-| `json` | `path` JSONPath; join list values with newline |
-| `html` | `selector` CSS; `attr` text or attribute |
-| `regex` | `pattern` on response text; group 1 or 0 |
-| `field` | use already-extracted item field (no extra HTTP) |
+`description` is the field that holds the job text on the detail response:
+JSONPath when `items.kind` is `json` (`$.description`), CSS (optional
+`selector@attr`) when `items.kind` is `html`.
 
 If `detail_request` is omitted, description comes from `items.fields.description`
 (search payload only).
 
-## Pagination (optional)
-
-```json
-"pagination": {
-  "kind": "page_query",
-  "param": "page",
-  "start": 1,
-  "max_pages": 5
-}
-```
-
-Supported `kind` values: `page_query` (increment query param), `none` (default).
-Stop early when a page yields zero items.
+Do not add a pagination object. Put a max-items query parameter on the search
+request itself if the source API supports it.
 
 ## Execution rules
 
 - Cap detail requests per source (`max_detail_requests`, default 100).
 - Deduplicate by position id before matching.
-- Retries: 3 attempts, exponential backoff, only on 429/5xx.
+- Retries: `@retry_http` only retries; `send_request` raises on 429/5xx so the
+  decorator can back off (3 attempts, exponential).
 - **Skip detail HTTP** for ids in `skip_detail_ids` (old items + unchanged
   resumes). Crawler still returns those items from search (id, title, url)
   without a description; CLI fills scores from email cache.
