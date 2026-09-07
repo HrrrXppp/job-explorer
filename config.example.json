@@ -1,0 +1,41 @@
+{
+  "user_agent": "Your Name (you@example.com; https://github.com/you) — open to backend roles",
+  "resumes": [
+    { "id": "primary", "path": "resumes/primary.docx" }
+  ],
+  "matching": {
+    "model": "sentence-transformers/all-MiniLM-L6-v2"
+  },
+  "email": {
+    "to": ["me@example.com"]
+  },
+  "sources": [
+    {
+      "id": "example",
+      "search_request": {
+        "method": "GET",
+        "url": "https://example.com/search",
+        "headers": {
+          "Accept": "application/json",
+          "Authorization": "Bearer ${API_TOKEN}"
+        },
+        "query": { "q": "python" }
+      },
+      "items": {
+        "kind": "json",
+        "list": "$.results",
+        "fields": {
+          "id": "id",
+          "title": "title",
+          "url": "html_url"
+        }
+      },
+      "detail_request": {
+        "method": "GET",
+        "url": "https://example.com/jobs/{id}",
+        "headers": { "Accept": "application/json" },
+        "description": "$.description"
+      }
+    }
+  ]
+}

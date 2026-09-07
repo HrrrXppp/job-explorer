@@ -1,0 +1,50 @@
+{
+  "user_agent": "It's Evgenii Khrunov. I'm opened for new position. You can email me hrrrxppp@gmail.com. My Linkedin account is www.linkedin.com/in/evgeniy-khrunov",
+  "resumes": [
+    { "id": "primary", "path": "/home/ekhrunov/Downloads/Khrunov_Evgenii_Resume (7).docx" }
+  ],
+  "matching": {
+    "model": "sentence-transformers/all-MiniLM-L6-v2"
+  },
+  "email": {
+    "to": ["hrrrxppp@gmail.com"]
+  },
+  "sources": [
+    {
+      "id": "chase",
+      "search_request": {
+        "method": "GET",
+        "url": "https://jpmc.fa.oraclecloud.com/hcmRestApi/resources/latest/recruitingCEJobRequisitions",
+        "headers": {
+          "Accept": "application/json"
+        },
+        "query": {
+          "onlyData": "true",
+          "expand": "requisitionList.workLocation,requisitionList.otherWorkLocations,requisitionList.secondaryLocations,flexFieldsFacet.values,requisitionList.requisitionFlexFields",
+          "finder": "findReqs;siteNumber=CX_1001,facetsList=LOCATIONS;WORK_LOCATIONS;WORKPLACE_TYPES;TITLES;CATEGORIES;ORGANIZATIONS;POSTING_DATES;FLEX_FIELDS,limit=25,keyword=Python,locationId=300000020683471,radius=25,radiusUnit=MI,sortBy=RELEVANCY"
+        }
+      },
+      "items": {
+        "kind": "json",
+        "list": "$.items[0].requisitionList",
+        "fields": {
+          "id": "Id",
+          "title": "Title",
+          "description": "ShortDescriptionStr"
+        },
+        "url_template": "https://jpmc.fa.oraclecloud.com/hcmUI/CandidateExperience/en/sites/CX_1001/job/{id}"
+      },
+      "detail_request": {
+        "method": "GET",
+        "url": "https://jpmc.fa.oraclecloud.com/hcmRestApi/resources/latest/recruitingCEJobRequisitionDetails",
+        "headers": { "Accept": "application/json" },
+        "query": {
+          "expand": "all",
+          "onlyData": "true",
+          "finder": "ById;Id={id},siteNumber=CX_1001"
+        },
+        "description": "$.items[0].ExternalDescriptionStr"
+      }
+    }
+  ]
+}
