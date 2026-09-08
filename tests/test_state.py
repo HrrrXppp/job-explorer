@@ -1,7 +1,14 @@
 from __future__ import annotations
 
 from job_explorer.models import CachedPosition, PreviousState, ScoredPosition
-from job_explorer.state import decode_state, encode_state, resumes_unchanged, skip_detail_ids, split_new_previous
+from job_explorer.state import (
+    decode_state,
+    encode_state,
+    merge_previous_states,
+    resumes_unchanged,
+    skip_detail_ids,
+    split_new_previous,
+)
 
 
 def _row(pid: str, percent: float) -> ScoredPosition:
@@ -69,3 +76,49 @@ def test_corrupt_json_is_empty() -> None:
     state = decode_state("not-json{")
     assert state.position_ids == set()
     assert state.positions == []
+
+
+def _cached(pid: str, title: str = "T", score: float = 1.0) -> CachedPosition:
+    return CachedPosition(
+        id=pid,
+        title=title,
+        url="u",
+        source_id="example",
+        scores={"primary": score},
+    )
+
+
+def test_merge_previous_states_newest_wins() -> None:
+    newest = PreviousState(
+        version=2,
+        resume_fingerprints={"primary": "sha256:new"},
+        positions=[_cached("example:1", title="New title", score=90.0)],
+        position_ids={"example:1"},
+    )
+    middle = PreviousState(
+        version=2,
+        resume_fingerprints={"primary": "sha256:old"},
+        positions=[_cached("example:1", title="Old title", score=10.0), _cached("example:2")],
+        position_ids={"example:1", "example:2"},
+    )
+    oldest = PreviousState(
+        version=2,
+        resume_fingerprints={"primary": "sha256:older"},
+        positions=[_cached("example:3")],
+        position_ids={"example:3"},
+    )
+    merged = merge_previous_states([newest, middle, oldest])
+    assert merged.resume_fingerprints == {"primary": "sha256:new"}
+    assert {row.id: row.title for row in merged.positions} == {
+        "example:1": "New title",
+        "example:2": "T",
+        "example:3": "T",
+    }
+    assert merged.position_ids == {"example:1", "example:2", "example:3"}
+
+
+def test_merge_previous_states_empty() -> None:
+    merged = merge_previous_states([PreviousState(), PreviousState()])
+    assert merged.positions == []
+    assert merged.position_ids == set()
+    assert merged.resume_fingerprints == {}

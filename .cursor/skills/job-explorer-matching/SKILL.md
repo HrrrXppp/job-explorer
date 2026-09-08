@@ -26,7 +26,7 @@ Local only. Default model: `sentence-transformers/all-MiniLM-L6-v2`
 - Paths are relative to `config.json`'s directory unless absolute.
 - Do not commit real resumes; tests use tiny fixture `.docx` files.
 - Fingerprint: `sha256:` + hex digest of **file bytes** (not extracted text).
-  Compared to last email `resume_fingerprints`. Any add/remove/byte change
+  Compared to newest-email `resume_fingerprints` from the last three reports. Any add/remove/byte change
   means resumes are not old → re-fetch details for previous positions too.
 
 ## Scoring

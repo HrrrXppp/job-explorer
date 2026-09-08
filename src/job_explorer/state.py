@@ -2,11 +2,11 @@ from __future__ import annotations
 
 import json
 import logging
-from collections.abc import Mapping
+from collections.abc import Mapping, Sequence
 
 from pydantic import ValidationError
 
-from job_explorer.models import PreviousState, ScoredPosition
+from job_explorer.models import CachedPosition, PreviousState, ScoredPosition
 
 logger = logging.getLogger(__name__)
 
@@ -16,6 +16,29 @@ STATE_FILENAME = "job-explorer-state.json"
 
 def empty_state() -> PreviousState:
     return PreviousState(version=STATE_VERSION, resume_fingerprints={}, positions=[], position_ids=set())
+
+
+def merge_previous_states(states: Sequence[PreviousState]) -> PreviousState:
+    """Newest-first: keep latest fingerprints and latest cached row per id."""
+    fingerprints: dict[str, str] = {}
+    by_id: dict[str, CachedPosition] = {}
+    position_ids: set[str] = set()
+    for state in states:
+        if not fingerprints and state.resume_fingerprints:
+            fingerprints = dict(state.resume_fingerprints)
+        for row in state.positions:
+            if row.id not in by_id:
+                by_id[row.id] = row
+        position_ids.update(state.position_ids)
+        position_ids.update(row.id for row in state.positions)
+    if not fingerprints and not by_id and not position_ids:
+        return empty_state()
+    return PreviousState(
+        version=STATE_VERSION,
+        resume_fingerprints=fingerprints,
+        positions=list(by_id.values()),
+        position_ids=position_ids,
+    )
 
 
 def decode_state(payload: str | bytes | dict) -> PreviousState:

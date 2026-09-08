@@ -92,10 +92,10 @@ when the search payload has no job URL. Example:
 `https://careers.example.com/jobs/{id}`.
 
 Optional `keep_if` drops items after extract unless any listed field contains
-any of `contains_any` (case-insensitive substring). Use it when the search
-HTTP API has no country/location query. Example: keep United States–eligible
-remote jobs via a `location` field and needles like `USA`, `United States`,
-`Worldwide`. `keep_if.fields` must be keys in `items.fields`.
+any of `contains_any` (case-insensitive substring). A single object is one
+OR-group. An array of objects is AND across groups (e.g. title/description
+must mention Python **and** location must mention the United States).
+`keep_if.fields` must be keys in `items.fields`.
 
 Skip items missing `id`. Log and continue on a single item parse error.
 
@@ -119,13 +119,16 @@ request itself if the source API supports it.
 - Cap detail requests per source (`max_detail_requests`, default 100).
 - Deduplicate by position id before matching.
 - Retries: `@retry_http` only retries; `send_request` raises on 429/5xx so the
-  decorator can back off (3 attempts, exponential).
+  decorator can back off (3 attempts, exponential). Disconnects and other
+  transport errors are not retried.
+- One failed search or detail request (`RequestFailed`) stops the run. Sources
+  and detail fetches run sequentially so remaining HTTP is not started.
 - **Skip detail HTTP** for ids in `skip_detail_ids` (old items + unchanged
   resumes). Crawler still returns those items from search (id, title, url)
   without a description; CLI fills scores from email cache.
 - Tests: fixture bodies + `respx`; assert exact detail URLs and extracted
   description text. Assert no detail call when id is in `skip_detail_ids`.
-  No live fetches.
+  No live fetches. Assert a failed request stops later sources and details.
 
 ## Config interpolation
 

@@ -4,7 +4,7 @@ description: >-
   Implements and extends the job-explorer Python CLI from GitHub issue #1:
   crawl job sources from config.json HTTP request lists, match DOCX resumes
   with a local sentence-transformers model, email a ranked new/previous report
-  via Gmail API, remain stateless (previous positions come from the last email).
+  via Gmail API, remain stateless (previous positions come from the last three emails).
   Use when working on this repo, config.json, pytest, the CLI pipeline, or
   issue #1.
 ---
@@ -15,7 +15,8 @@ Issue: https://github.com/HrrrXppp/job-explorer/issues/1
 
 This repo is a **stateless** Python CLI. Do not add a database, cache file, or
 local "seen jobs" store. Previous positions, scores, and resume fingerprints
-come only from the last Gmail report.
+come only from the last three Gmail reports (newest fingerprints and cached
+rows win; position ids are the union).
 
 ## Constraints (must not violate)
 
@@ -40,8 +41,8 @@ come only from the last Gmail report.
 
 ```
 load config + env
-  -> Gmail: read last report JSON (empty if none)
-  -> hash each resume file (SHA-256); compare to last email fingerprints
+  -> Gmail: read last three report JSONs and merge (empty if none)
+  -> hash each resume file (SHA-256); compare to newest email fingerprints
   -> for each source: search HTTP -> parse items
   -> detail HTTP only when required (see skip rule) -> match those
   -> split new vs previous; sort each group by match % desc
@@ -52,12 +53,12 @@ load config + env
 
 Do **not** issue a detail request for a position when **both** are true:
 
-1. **Old item:** its id is in the last email’s position list.
+1. **Old item:** its id is in the merged last-three-email position list.
 2. **Resumes unchanged:** current SHA-256 of every resume file (keyed by
-   resume id) equals `resume_fingerprints` from that email (same ids, same
-   hashes).
+   resume id) equals `resume_fingerprints` from the newest email that has
+   them (same ids, same hashes).
 
-Then reuse the last email’s title, url, source id, and scores for the
+Then reuse the newest cached title, url, source id, and scores for the
 **Previous** section. Search requests still run so we know the job is open.
 
 **Always** fetch details and re-score when any of these hold: new position id;

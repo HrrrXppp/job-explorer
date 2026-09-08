@@ -516,7 +516,9 @@
           "location": "candidate_required_location"
         },
         "keep_if": {
-          "fields": ["location"],
+          "fields": [
+            "location"
+          ],
           "contains_any": [
             "United States",
             "USA",
@@ -552,7 +554,9 @@
           "location": "location"
         },
         "keep_if": {
-          "fields": ["location"],
+          "fields": [
+            "location"
+          ],
           "contains_any": [
             "United States",
             "USA",
@@ -665,7 +669,9 @@
           "location": "locations"
         },
         "keep_if": {
-          "fields": ["location"],
+          "fields": [
+            "location"
+          ],
           "contains_any": [
             "United States",
             "USA",
@@ -713,7 +719,10 @@
         },
         "url_template": "{id}",
         "keep_if": {
-          "fields": ["title", "description"],
+          "fields": [
+            "title",
+            "description"
+          ],
           "contains_any": [
             "United States",
             "USA",
@@ -748,7 +757,10 @@
         },
         "url_template": "{id}",
         "keep_if": {
-          "fields": ["title", "description"],
+          "fields": [
+            "title",
+            "description"
+          ],
           "contains_any": [
             "United States",
             "USA",
@@ -814,6 +826,540 @@
           "description": "description"
         },
         "url_template": "https://4dayweek.io/job/{slug}"
+      }
+    },
+    {
+      "id": "netflix",
+      "search_request": {
+        "method": "GET",
+        "url": "https://explore.jobs.netflix.net/api/apply/v2/jobs",
+        "headers": {
+          "Accept": "application/json"
+        },
+        "query": {
+          "domain": "netflix.com",
+          "start": "0",
+          "num": "20",
+          "query": "python",
+          "location": "USA - Remote"
+        }
+      },
+      "items": {
+        "kind": "json",
+        "list": "$.positions",
+        "fields": {
+          "id": "id",
+          "title": "name",
+          "location": "location"
+        },
+        "url_template": "https://explore.jobs.netflix.net/careers/job/{id}"
+      },
+      "detail_request": {
+        "method": "GET",
+        "url": "https://explore.jobs.netflix.net/api/apply/v2/jobs/{id}",
+        "headers": {
+          "Accept": "application/json"
+        },
+        "query": {
+          "domain": "netflix.com"
+        },
+        "description": "$.job_description"
+      },
+      "max_detail_requests": 20
+    },
+    {
+      "id": "nvidia",
+      "search_request": {
+        "method": "POST",
+        "url": "https://nvidia.wd5.myworkdayjobs.com/wday/cxs/nvidia/NVIDIAExternalCareerSite/jobs",
+        "headers": {
+          "Accept": "application/json"
+        },
+        "body": {
+          "appliedFacets": {
+            "locationHierarchy1": [
+              "2fcb99c455831013ea52fb338f2932d8"
+            ],
+            "locationHierarchy2": [
+              "0c3f5f117e9a0101f63dc469c3010000"
+            ]
+          },
+          "limit": 20,
+          "offset": 0,
+          "searchText": "Python"
+        }
+      },
+      "items": {
+        "kind": "json",
+        "list": "$.jobPostings",
+        "fields": {
+          "id": "bulletFields[0]",
+          "title": "title",
+          "externalPath": "externalPath"
+        },
+        "url_template": "https://nvidia.wd5.myworkdayjobs.com/en-US/NVIDIAExternalCareerSite{externalPath}"
+      },
+      "detail_request": {
+        "method": "GET",
+        "url": "https://nvidia.wd5.myworkdayjobs.com/wday/cxs/nvidia/NVIDIAExternalCareerSite{externalPath}",
+        "headers": {
+          "Accept": "application/json"
+        },
+        "description": "$.jobPostingInfo.jobDescription"
+      }
+    },
+    {
+      "id": "salesforce",
+      "search_request": {
+        "method": "POST",
+        "url": "https://salesforce.wd12.myworkdayjobs.com/wday/cxs/salesforce/External_Career_Site/jobs",
+        "headers": {
+          "Accept": "application/json"
+        },
+        "body": {
+          "appliedFacets": {
+            "CF_-_REC_-_LRV_-_Job_Posting_Anchor_-_Country_from_Job_Posting_Location_Extended": [
+              "bc33aa3152ec42d4995f4791a106ed09"
+            ],
+            "locations": [
+              "1038e944b1101012453ae52d34d90000",
+              "1038e944b1101012453bcb4b56f50000",
+              "1038e944b1101012453aa849296c0000",
+              "1038e944b1101012453bb77c6a9b0000",
+              "1038e944b1101012453afacdb9690000",
+              "1038e944b1101012453b72506c400000",
+              "1038e944b1101012453cc894946c0000",
+              "1038e944b1101012453d456d0e830000",
+              "1038e944b1101012453f7a44a4600000",
+              "1038e944b1101012453fb2ac8e470000",
+              "1038e944b1101012453e752dddd20000",
+              "1038e944b1101012453b06cedb360000",
+              "1038e944b1101012453dec47bfbf0000",
+              "1038e944b1101012453a46bc0d2d0000",
+              "1038e944b1101012453c57bcbca30000",
+              "1038e944b1101012453ef20addc20000",
+              "1038e944b1101012453a9b0091a90000",
+              "1038e944b1101012453c6324b0730000",
+              "1038e944b11010124540b7b942ff0000",
+              "1038e944b1101012453fa5782d020000",
+              "1038e944b1101012453ba0ad55760000",
+              "1038e944b1101012453b89242f400000",
+              "1038e944b1101012453a1fa1473d0000",
+              "1038e944b1101012453d8c4078900000",
+              "1038e944b1101012453cbd2d67600000",
+              "1038e944b1101012453ca35f71700000",
+              "1038e944b1101012453df715ee030000",
+              "1038e944b1101012453f280fd4fe0000",
+              "1038e944b1101012453a2d796e9f0000",
+              "1038e944b11010124539fe8ad1340000",
+              "1038e944b11010124540c3b8ffe80000",
+              "1038e944b1101012453b30da001a0000",
+              "1038e944b1101012453c3c21cd850000",
+              "1038e944b1101012453b2570616b0000",
+              "1038e944b1101012453e9e9943f20000",
+              "1038e944b1101012453b5c1626e70000"
+            ]
+          },
+          "limit": 20,
+          "offset": 0,
+          "searchText": "Python"
+        }
+      },
+      "items": {
+        "kind": "json",
+        "list": "$.jobPostings",
+        "fields": {
+          "id": "bulletFields[0]",
+          "title": "title",
+          "externalPath": "externalPath"
+        },
+        "url_template": "https://salesforce.wd12.myworkdayjobs.com/en-US/External_Career_Site{externalPath}"
+      },
+      "detail_request": {
+        "method": "GET",
+        "url": "https://salesforce.wd12.myworkdayjobs.com/wday/cxs/salesforce/External_Career_Site{externalPath}",
+        "headers": {
+          "Accept": "application/json"
+        },
+        "description": "$.jobPostingInfo.jobDescription"
+      }
+    },
+    {
+      "id": "adobe",
+      "search_request": {
+        "method": "POST",
+        "url": "https://adobe.wd5.myworkdayjobs.com/wday/cxs/adobe/external_experienced/jobs",
+        "headers": {
+          "Accept": "application/json"
+        },
+        "body": {
+          "appliedFacets": {
+            "locationCountry": [
+              "bc33aa3152ec42d4995f4791a106ed09"
+            ],
+            "locations": [
+              "3ba4ecdf4893100bc84a91e9c1d56b75",
+              "3ba4ecdf4893100bc84cbc28d0e96d47",
+              "3ba4ecdf4893100bc84b59bbd5aa6cd3",
+              "3ba4ecdf4893100bc84c991cf5176d0b"
+            ]
+          },
+          "limit": 20,
+          "offset": 0,
+          "searchText": "Python"
+        }
+      },
+      "items": {
+        "kind": "json",
+        "list": "$.jobPostings",
+        "fields": {
+          "id": "bulletFields[0]",
+          "title": "title",
+          "externalPath": "externalPath"
+        },
+        "url_template": "https://adobe.wd5.myworkdayjobs.com/en-US/external_experienced{externalPath}"
+      },
+      "detail_request": {
+        "method": "GET",
+        "url": "https://adobe.wd5.myworkdayjobs.com/wday/cxs/adobe/external_experienced{externalPath}",
+        "headers": {
+          "Accept": "application/json"
+        },
+        "description": "$.jobPostingInfo.jobDescription"
+      }
+    },
+    {
+      "id": "cisco",
+      "search_request": {
+        "method": "POST",
+        "url": "https://cisco.wd5.myworkdayjobs.com/wday/cxs/cisco/Cisco_Careers/jobs",
+        "headers": {
+          "Accept": "application/json"
+        },
+        "body": {
+          "appliedFacets": {
+            "locations": [
+              "41e5bb1cc4b710011a9977b49fca0000",
+              "16c252727cc710011aafde4224d90000",
+              "9f4672605c9810011a9999dc9e590000",
+              "07393271a70110011acc32b6a7ac0000",
+              "f75949b114e610011ab526deaa580000",
+              "76e3110fe48110011ad8d3e50de40000",
+              "76e3110fe48110011ad8dfe78e090000",
+              "85cf476a7b0310011acaf55d70a60000",
+              "0aec87b531dc10011aa41c286ffc0000",
+              "c9c76db7a89410011a9f04a8867d0000",
+              "c9c76db7a89410011a9f10bd68f30000",
+              "9f4672605c9810011a9a0ad5e99c0000",
+              "767c8ccb186510011ac4e78dda0a0000",
+              "9f4672605c9810011a9a237d99950000",
+              "f43cf336356510011ac842676f380000",
+              "16c252727cc710011ab09771eb050000",
+              "41e5bb1cc4b710011a9a4a89d9930000",
+              "a03bc7deb89810011a9f3ddae50e0000",
+              "120017fcd3a110011ac27aaf1e640000",
+              "f75949b114e610011ab5edd1f9240000",
+              "f43cf336356510011ac8986838630000",
+              "9f4672605c9810011a9a981870d50000",
+              "16c252727cc710011ab0f799c2740000",
+              "76e3110fe48110011ad9c19912050000",
+              "f43cf336356510011ac8cc2631fa0000",
+              "120017fcd3a110011ac2d7bc4da70000",
+              "a03bc7deb89810011a9fb8e820e40000",
+              "c9c76db7a89410011a9ff806a8f00000",
+              "41e5bb1cc4b710011a9aecc6e3b40000",
+              "07393271a70110011acd8b130b460000",
+              "41e5bb1cc4b710011a9b06a0e9c60000",
+              "07393271a70110011acda328fea20000",
+              "16c252727cc710011ab1796748130000",
+              "120017fcd3a110011ac33d2a80e30000",
+              "a03bc7deb89810011aa01d2813510000",
+              "120017fcd3a110011ac3565e96c10000",
+              "0aec87b531dc10011aa58dee7c810000",
+              "9f4672605c9810011a9b653bf39f0000",
+              "85cf476a7b0310011acc8d02c98d0000",
+              "767c8ccb186510011ac654bc518e0000",
+              "9f4672605c9810011a9b90975dac0000",
+              "16c252727cc710011ab1f062f3f10000",
+              "c9c76db7a89410011aa0bae266a50000",
+              "0aec87b531dc10011aa5eafa9f350000",
+              "07393271a70110011ace4d38aeae0000",
+              "0aec87b531dc10011aa6043183b50000",
+              "0aec87b531dc10011aa6129ba8e80000",
+              "f75949b114e610011ab75ab79fcf0000",
+              "f75949b114e610011ab76757014a0000",
+              "f75949b114e610011ab7736641b50000"
+            ]
+          },
+          "limit": 20,
+          "offset": 0,
+          "searchText": "Python"
+        }
+      },
+      "items": {
+        "kind": "json",
+        "list": "$.jobPostings",
+        "fields": {
+          "id": "bulletFields[0]",
+          "title": "title",
+          "externalPath": "externalPath"
+        },
+        "url_template": "https://cisco.wd5.myworkdayjobs.com/en-US/Cisco_Careers{externalPath}"
+      },
+      "detail_request": {
+        "method": "GET",
+        "url": "https://cisco.wd5.myworkdayjobs.com/wday/cxs/cisco/Cisco_Careers{externalPath}",
+        "headers": {
+          "Accept": "application/json"
+        },
+        "description": "$.jobPostingInfo.jobDescription"
+      }
+    },
+    {
+      "id": "stripe",
+      "search_request": {
+        "method": "GET",
+        "url": "https://boards-api.greenhouse.io/v1/boards/stripe/jobs",
+        "headers": {
+          "Accept": "application/json"
+        },
+        "query": {
+          "content": "true"
+        }
+      },
+      "items": {
+        "kind": "json",
+        "list": "$.jobs",
+        "fields": {
+          "id": "id",
+          "title": "title",
+          "url": "absolute_url",
+          "description": "content",
+          "location": "location.name"
+        },
+        "keep_if": [
+          {
+            "fields": [
+              "title",
+              "description"
+            ],
+            "contains_any": [
+              "python"
+            ]
+          },
+          {
+            "fields": [
+              "location"
+            ],
+            "contains_any": [
+              "United States",
+              "USA",
+              "U.S.",
+              "San Francisco",
+              "New York",
+              "Seattle",
+              "Austin",
+              "Boston",
+              "Denver",
+              "Chicago",
+              "Los Angeles",
+              "Remote"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "airbnb",
+      "search_request": {
+        "method": "GET",
+        "url": "https://boards-api.greenhouse.io/v1/boards/airbnb/jobs",
+        "headers": {
+          "Accept": "application/json"
+        },
+        "query": {
+          "content": "true"
+        }
+      },
+      "items": {
+        "kind": "json",
+        "list": "$.jobs",
+        "fields": {
+          "id": "id",
+          "title": "title",
+          "url": "absolute_url",
+          "description": "content",
+          "location": "location.name"
+        },
+        "keep_if": [
+          {
+            "fields": [
+              "title",
+              "description"
+            ],
+            "contains_any": [
+              "python"
+            ]
+          },
+          {
+            "fields": [
+              "location"
+            ],
+            "contains_any": [
+              "United States",
+              "USA",
+              "U.S.",
+              "San Francisco",
+              "New York",
+              "Seattle",
+              "Austin",
+              "Boston",
+              "Denver",
+              "Chicago",
+              "Los Angeles",
+              "Remote"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "cloudflare",
+      "search_request": {
+        "method": "GET",
+        "url": "https://boards-api.greenhouse.io/v1/boards/cloudflare/jobs",
+        "headers": {
+          "Accept": "application/json"
+        },
+        "query": {
+          "content": "true"
+        }
+      },
+      "items": {
+        "kind": "json",
+        "list": "$.jobs",
+        "fields": {
+          "id": "id",
+          "title": "title",
+          "url": "absolute_url",
+          "description": "content",
+          "location": "location.name"
+        },
+        "keep_if": [
+          {
+            "fields": [
+              "title",
+              "description"
+            ],
+            "contains_any": [
+              "python"
+            ]
+          },
+          {
+            "fields": [
+              "location"
+            ],
+            "contains_any": [
+              "United States",
+              "USA",
+              "U.S.",
+              "Remote"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "twilio",
+      "search_request": {
+        "method": "GET",
+        "url": "https://boards-api.greenhouse.io/v1/boards/twilio/jobs",
+        "headers": {
+          "Accept": "application/json"
+        },
+        "query": {
+          "content": "true"
+        }
+      },
+      "items": {
+        "kind": "json",
+        "list": "$.jobs",
+        "fields": {
+          "id": "id",
+          "title": "title",
+          "url": "absolute_url",
+          "description": "content",
+          "location": "location.name"
+        },
+        "keep_if": [
+          {
+            "fields": [
+              "title",
+              "description"
+            ],
+            "contains_any": [
+              "python"
+            ]
+          },
+          {
+            "fields": [
+              "location"
+            ],
+            "contains_any": [
+              "United States",
+              "USA",
+              "U.S.",
+              "Remote"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "dropbox",
+      "search_request": {
+        "method": "GET",
+        "url": "https://boards-api.greenhouse.io/v1/boards/dropbox/jobs",
+        "headers": {
+          "Accept": "application/json"
+        },
+        "query": {
+          "content": "true"
+        }
+      },
+      "items": {
+        "kind": "json",
+        "list": "$.jobs",
+        "fields": {
+          "id": "id",
+          "title": "title",
+          "url": "absolute_url",
+          "description": "content",
+          "location": "location.name"
+        },
+        "keep_if": [
+          {
+            "fields": [
+              "title",
+              "description"
+            ],
+            "contains_any": [
+              "python"
+            ]
+          },
+          {
+            "fields": [
+              "location"
+            ],
+            "contains_any": [
+              "United States",
+              "USA",
+              "U.S.",
+              "San Francisco",
+              "Remote"
+            ]
+          }
+        ]
       }
     }
   ]

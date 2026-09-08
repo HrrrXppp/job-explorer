@@ -76,3 +76,7 @@ def test_operator_config_limits_remote_search_to_united_states() -> None:
     assert "locations:USA" in by_id["workingnomads"].search_request.body["query"]["query_string"]["query"]
     assert by_id["remotive"].items.keep_if is not None
     assert by_id["remoteok"].items.keep_if is not None
+    assert by_id["netflix"].search_request.query["location"] == "USA - Remote"
+    assert by_id["netflix"].search_request.query["query"] == "python"
+    assert "2fcb99c455831013ea52fb338f2932d8" in by_id["nvidia"].search_request.body["appliedFacets"]["locationHierarchy1"]
+    assert isinstance(by_id["stripe"].items.keep_if, list)

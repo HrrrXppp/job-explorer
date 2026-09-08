@@ -58,7 +58,7 @@ class ItemsSpec(FrozenModel):
     list: str
     fields: dict[str, str]
     url_template: str | None = None
-    keep_if: KeepIfSpec | None = None
+    keep_if: KeepIfSpec | list[KeepIfSpec] | None = None
 
     @field_validator("fields")
     @classmethod
@@ -75,11 +75,21 @@ class ItemsSpec(FrozenModel):
         stripped = value.strip()
         return stripped or None
 
+    def keep_if_groups(self) -> list[KeepIfSpec]:
+        if self.keep_if is None:
+            return []
+        if isinstance(self.keep_if, list):
+            return self.keep_if
+        return [self.keep_if]
+
     @model_validator(mode="after")
     def keep_if_fields_exist(self) -> ItemsSpec:
-        if self.keep_if is None:
-            return self
-        missing = [name for name in self.keep_if.fields if name not in self.fields]
+        missing = [
+            name
+            for group in self.keep_if_groups()
+            for name in group.fields
+            if name not in self.fields
+        ]
         if missing:
             raise ValueError(f"keep_if.fields must be keys in items.fields: {missing}")
         return self

@@ -11,17 +11,22 @@ from job_explorer.state import STATE_FILENAME, encode_state
 
 
 class FakeMessages:
-    def __init__(self, listing=None, message=None, attachments=None) -> None:
+    def __init__(self, listing=None, message=None, messages_by_id=None, attachments=None) -> None:
         self.listing = listing or {"messages": []}
         self.message = message
+        self.messages_by_id = messages_by_id or {}
         self.attachments_by_id = attachments or {}
         self.sent: list[dict] = []
+        self.list_kwargs: dict | None = None
 
     def list(self, **kwargs):
+        self.list_kwargs = kwargs
         return SimpleNamespace(execute=lambda: self.listing)
 
     def get(self, **kwargs):
-        return SimpleNamespace(execute=lambda: self.message)
+        message_id = kwargs.get("id")
+        payload = self.messages_by_id.get(message_id, self.message)
+        return SimpleNamespace(execute=lambda: payload)
 
     def send(self, **kwargs):
         self.sent.append(kwargs["body"])
@@ -52,11 +57,11 @@ class FakeService:
         return _Users()
 
 
-def _state_message(payload: dict) -> dict:
+def _state_message(payload: dict, message_id: str = "m1") -> dict:
     raw = json.dumps(payload).encode("utf-8")
     encoded = base64.urlsafe_b64encode(raw).decode("ascii")
     return {
-        "id": "m1",
+        "id": message_id,
         "payload": {
             "parts": [
                 {
@@ -89,6 +94,40 @@ def test_fetches_json_attachment() -> None:
     state = client.fetch_previous_state()
     assert "example:1" in state.position_ids
     assert state.resume_fingerprints["primary"] == "sha256:z"
+    assert messages.list_kwargs is not None
+    assert messages.list_kwargs["maxResults"] == 3
+
+
+def test_merges_positions_from_last_three_emails() -> None:
+    newest = json.loads(encode_state({"primary": "sha256:new"}, []))
+    newest["positions"] = [
+        {"id": "example:1", "title": "New", "url": "u", "source_id": "example", "scores": {"primary": 9.0}}
+    ]
+    older = json.loads(encode_state({"primary": "sha256:old"}, []))
+    older["positions"] = [
+        {"id": "example:2", "title": "Older", "url": "u", "source_id": "example", "scores": {"primary": 2.0}}
+    ]
+    oldest = json.loads(encode_state({"primary": "sha256:oldest"}, []))
+    oldest["positions"] = [
+        {"id": "example:3", "title": "Oldest", "url": "u", "source_id": "example", "scores": {"primary": 1.0}}
+    ]
+    messages = FakeMessages(
+        listing={"messages": [{"id": "m1"}, {"id": "m2"}, {"id": "m3"}]},
+        messages_by_id={
+            "m1": _state_message(newest, "m1"),
+            "m2": _state_message(older, "m2"),
+            "m3": _state_message(oldest, "m3"),
+        },
+    )
+    client = GmailClient(FakeService(messages))
+    state = client.fetch_previous_state()
+    assert state.resume_fingerprints["primary"] == "sha256:new"
+    assert state.position_ids == {"example:1", "example:2", "example:3"}
+    assert {row.id: row.title for row in state.positions} == {
+        "example:1": "New",
+        "example:2": "Older",
+        "example:3": "Oldest",
+    }
 
 
 def test_fetches_json_via_attachment_id() -> None:

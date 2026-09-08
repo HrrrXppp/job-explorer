@@ -2,7 +2,7 @@
 
 Stateless Python CLI that crawls job sources from HTTP requests in `config.json`, scores each opening against local DOCX resumes with [sentence-transformers](https://www.sbert.net/), and emails a ranked report (new vs previously seen) through the Gmail API.
 
-There is no database or local seen-jobs file. The previous run’s position ids, scores, and resume fingerprints are read from the last report email.
+There is no database or local seen-jobs file. The previous run’s position ids, scores, and resume fingerprints are read from the last three report emails.
 
 See [issue #1](https://github.com/HrrrXppp/job-explorer/issues/1) and the [implementation plan](.cursor/skills/job-explorer/implementation-plan.md).
 
