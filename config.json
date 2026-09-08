@@ -1361,6 +1361,542 @@
           }
         ]
       }
+    },
+    {
+      "id": "simplyhired",
+      "search_request": {
+        "method": "GET",
+        "url": "https://www.simplyhired.com/search",
+        "headers": {
+          "Accept": "text/html"
+        },
+        "query": {
+          "q": "python",
+          "l": "19707",
+          "mi": "50"
+        }
+      },
+      "items": {
+        "kind": "html",
+        "list": "[data-testid=\"searchSerpJob\"]",
+        "fields": {
+          "id": "h2 a@href",
+          "title": "[data-testid=\"searchSerpJobTitle\"]",
+          "url": "h2 a@href"
+        }
+      },
+      "detail_request": {
+        "method": "GET",
+        "url": "{url}",
+        "headers": {
+          "Accept": "text/html"
+        },
+        "description": "[data-testid=\"viewJobBodyJobFullDescriptionContent\"]"
+      },
+      "max_detail_requests": 20
+    },
+    {
+      "id": "simplyhired_remote",
+      "search_request": {
+        "method": "GET",
+        "url": "https://www.simplyhired.com/search",
+        "headers": {
+          "Accept": "text/html"
+        },
+        "query": {
+          "q": "python",
+          "l": "Remote"
+        }
+      },
+      "items": {
+        "kind": "html",
+        "list": "[data-testid=\"searchSerpJob\"]",
+        "fields": {
+          "id": "h2 a@href",
+          "title": "[data-testid=\"searchSerpJobTitle\"]",
+          "url": "h2 a@href"
+        }
+      },
+      "detail_request": {
+        "method": "GET",
+        "url": "{url}",
+        "headers": {
+          "Accept": "text/html"
+        },
+        "description": "[data-testid=\"viewJobBodyJobFullDescriptionContent\"]"
+      },
+      "max_detail_requests": 20
+    },
+    {
+      "id": "dice",
+      "search_request": {
+        "method": "GET",
+        "url": "https://www.dice.com/jobs",
+        "headers": {
+          "Accept": "text/html"
+        },
+        "query": {
+          "q": "python",
+          "location": "19707",
+          "radius": "50",
+          "radiusUnit": "mi",
+          "pageSize": "20",
+          "language": "en",
+          "countryCode": "US"
+        }
+      },
+      "items": {
+        "kind": "html",
+        "list": "a[data-testid=\"job-search-job-detail-link\"]",
+        "fields": {
+          "id": "@href",
+          "title": "@aria-label",
+          "url": "@href"
+        }
+      },
+      "detail_request": {
+        "method": "GET",
+        "url": "{url}",
+        "headers": {
+          "Accept": "text/html"
+        },
+        "description": "#jobDetailStructuredData"
+      },
+      "max_detail_requests": 20
+    },
+    {
+      "id": "dice_remote",
+      "search_request": {
+        "method": "GET",
+        "url": "https://www.dice.com/jobs",
+        "headers": {
+          "Accept": "text/html"
+        },
+        "query": {
+          "q": "python",
+          "workplaceTypes": "Remote",
+          "countryCode": "US",
+          "pageSize": "20",
+          "language": "en"
+        }
+      },
+      "items": {
+        "kind": "html",
+        "list": "a[data-testid=\"job-search-job-detail-link\"]",
+        "fields": {
+          "id": "@href",
+          "title": "@aria-label",
+          "url": "@href"
+        }
+      },
+      "detail_request": {
+        "method": "GET",
+        "url": "{url}",
+        "headers": {
+          "Accept": "text/html"
+        },
+        "description": "#jobDetailStructuredData"
+      },
+      "max_detail_requests": 20
+    },
+    {
+      "id": "talent",
+      "search_request": {
+        "method": "GET",
+        "url": "https://www.talent.com/jobs",
+        "headers": {
+          "Accept": "text/html"
+        },
+        "query": {
+          "k": "python",
+          "l": "19707",
+          "radius": "50"
+        }
+      },
+      "items": {
+        "kind": "html",
+        "list": "article[data-testid=\"job-card-unified\"]",
+        "fields": {
+          "id": "a[href*=\"/view\"]@href",
+          "title": "h2",
+          "url": "a[href*=\"/view\"]@href"
+        }
+      },
+      "detail_request": {
+        "method": "GET",
+        "url": "{url}",
+        "headers": {
+          "Accept": "text/html"
+        },
+        "description": "[class*=\"jobDescriptionColumn\"]"
+      },
+      "max_detail_requests": 20
+    },
+    {
+      "id": "talent_remote",
+      "search_request": {
+        "method": "GET",
+        "url": "https://www.talent.com/jobs",
+        "headers": {
+          "Accept": "text/html"
+        },
+        "query": {
+          "k": "python remote",
+          "l": "United States"
+        }
+      },
+      "items": {
+        "kind": "html",
+        "list": "article[data-testid=\"job-card-unified\"]",
+        "fields": {
+          "id": "a[href*=\"/view\"]@href",
+          "title": "h2",
+          "url": "a[href*=\"/view\"]@href",
+          "location": "address"
+        },
+        "keep_if": {
+          "fields": [
+            "title",
+            "location"
+          ],
+          "contains_any": [
+            "Remote",
+            "remote"
+          ]
+        }
+      },
+      "detail_request": {
+        "method": "GET",
+        "url": "{url}",
+        "headers": {
+          "Accept": "text/html"
+        },
+        "description": "[class*=\"jobDescriptionColumn\"]"
+      },
+      "max_detail_requests": 20
+    },
+    {
+      "id": "jobot",
+      "search_request": {
+        "method": "POST",
+        "url": "https://jobot-com-api.jobot.net/rest/jobs/search",
+        "headers": {
+          "Accept": "application/json"
+        },
+        "body": {
+          "query": "python",
+          "location": "19707"
+        }
+      },
+      "items": {
+        "kind": "json",
+        "list": "$.documents",
+        "fields": {
+          "id": "id",
+          "title": "title",
+          "url": "detailsUrl",
+          "location": "primaryLocation.address",
+          "header": "header"
+        },
+        "keep_if": {
+          "fields": [
+            "location"
+          ],
+          "contains_any": [
+            "DE",
+            "PA",
+            "NJ",
+            "MD",
+            "Delaware",
+            "Pennsylvania",
+            "New Jersey",
+            "Maryland"
+          ]
+        }
+      },
+      "detail_request": {
+        "method": "GET",
+        "url": "https://jobot-com-api.jobot.net/rest/details/{id}",
+        "headers": {
+          "Accept": "application/json"
+        },
+        "description": "$.markdown"
+      },
+      "max_detail_requests": 20
+    },
+    {
+      "id": "jobot_remote",
+      "search_request": {
+        "method": "POST",
+        "url": "https://jobot-com-api.jobot.net/rest/jobs/search",
+        "headers": {
+          "Accept": "application/json"
+        },
+        "body": {
+          "query": "python",
+          "commuteType": "remote"
+        }
+      },
+      "items": {
+        "kind": "json",
+        "list": "$.documents",
+        "fields": {
+          "id": "id",
+          "title": "title",
+          "url": "detailsUrl",
+          "location": "primaryLocation.address"
+        }
+      },
+      "detail_request": {
+        "method": "GET",
+        "url": "https://jobot-com-api.jobot.net/rest/details/{id}",
+        "headers": {
+          "Accept": "application/json"
+        },
+        "description": "$.markdown"
+      },
+      "max_detail_requests": 20
+    },
+    {
+      "id": "cybercoders",
+      "search_request": {
+        "method": "GET",
+        "url": "https://www.cybercoders.com/ccv5-jobs/search",
+        "headers": {
+          "Accept": "application/json"
+        },
+        "query": {
+          "keyword": "python",
+          "locationKeyword": "Hockessin, Delaware",
+          "location": "39.7876,-75.6966",
+          "miles": "60",
+          "buid": "1",
+          "rows": "20",
+          "page": "1"
+        }
+      },
+      "items": {
+        "kind": "json",
+        "list": "$.jobs",
+        "fields": {
+          "id": "Id",
+          "title": "jobTitle",
+          "slug": "JobURL",
+          "location": "City",
+          "description": "ShortDescription"
+        },
+        "url_template": "https://www.cybercoders.com/{slug}"
+      },
+      "detail_request": {
+        "method": "GET",
+        "url": "https://www.cybercoders.com/ccv5-jobs/details",
+        "headers": {
+          "Accept": "application/json"
+        },
+        "query": {
+          "id": "{id}",
+          "buid": "1"
+        },
+        "description": "$.descriptionWithoutHtml"
+      },
+      "max_detail_requests": 20
+    },
+    {
+      "id": "cybercoders_remote",
+      "search_request": {
+        "method": "GET",
+        "url": "https://www.cybercoders.com/ccv5-jobs/search",
+        "headers": {
+          "Accept": "application/json"
+        },
+        "query": {
+          "keyword": "python",
+          "workLocationTypeId": "3",
+          "buid": "1",
+          "rows": "20",
+          "page": "1"
+        }
+      },
+      "items": {
+        "kind": "json",
+        "list": "$.jobs",
+        "fields": {
+          "id": "Id",
+          "title": "jobTitle",
+          "slug": "JobURL",
+          "location": "City",
+          "description": "ShortDescription"
+        },
+        "url_template": "https://www.cybercoders.com/{slug}"
+      },
+      "detail_request": {
+        "method": "GET",
+        "url": "https://www.cybercoders.com/ccv5-jobs/details",
+        "headers": {
+          "Accept": "application/json"
+        },
+        "query": {
+          "id": "{id}",
+          "buid": "1"
+        },
+        "description": "$.descriptionWithoutHtml"
+      },
+      "max_detail_requests": 20
+    },
+    {
+      "id": "teksystems",
+      "search_request": {
+        "method": "POST",
+        "url": "https://careers.teksystems.com/widgets",
+        "headers": {
+          "Accept": "application/json"
+        },
+        "body": {
+          "lang": "en_us",
+          "deviceType": "desktop",
+          "country": "united_states",
+          "pageName": "search-results",
+          "ddoKey": "refineSearch",
+          "from": 0,
+          "jobs": true,
+          "counts": true,
+          "size": 20,
+          "keywords": "python",
+          "global": true,
+          "all_fields": [
+            "city",
+            "state",
+            "category",
+            "type",
+            "country",
+            "remoteOnsite"
+          ],
+          "selected_fields": {
+            "state": [
+              "Delaware",
+              "Pennsylvania",
+              "Maryland",
+              "New Jersey"
+            ],
+            "city": [
+              "Wilmington",
+              "Hockessin",
+              "Philadelphia",
+              "Baltimore",
+              "White Marsh",
+              "Owings Mills",
+              "Linthicum",
+              "Hanover",
+              "Egg Harbor City",
+              "Camden",
+              "Cherry Hill",
+              "West Chester",
+              "Chester",
+              "Exton",
+              "Media",
+              "Elkton",
+              "Aberdeen",
+              "Dover",
+              "Middletown",
+              "New Castle"
+            ]
+          }
+        }
+      },
+      "items": {
+        "kind": "json",
+        "list": "$.refineSearch.data.jobs",
+        "fields": {
+          "id": "jobSeqNo",
+          "title": "title",
+          "location": "location",
+          "description": "descriptionTeaser"
+        },
+        "url_template": "https://careers.teksystems.com/us/en/job/{id}"
+      },
+      "detail_request": {
+        "method": "POST",
+        "url": "https://careers.teksystems.com/widgets",
+        "headers": {
+          "Accept": "application/json"
+        },
+        "body": {
+          "lang": "en_us",
+          "deviceType": "desktop",
+          "country": "united_states",
+          "pageName": "job-description",
+          "ddoKey": "jobDetail",
+          "jobSeqNo": "{id}",
+          "refNum": "TESYUS"
+        },
+        "description": "$.jobDetail.data.job.description"
+      },
+      "max_detail_requests": 20
+    },
+    {
+      "id": "teksystems_remote",
+      "search_request": {
+        "method": "POST",
+        "url": "https://careers.teksystems.com/widgets",
+        "headers": {
+          "Accept": "application/json"
+        },
+        "body": {
+          "lang": "en_us",
+          "deviceType": "desktop",
+          "country": "united_states",
+          "pageName": "search-results",
+          "ddoKey": "refineSearch",
+          "from": 0,
+          "jobs": true,
+          "counts": true,
+          "size": 20,
+          "keywords": "python",
+          "global": true,
+          "all_fields": [
+            "city",
+            "state",
+            "category",
+            "type",
+            "country",
+            "remoteOnsite"
+          ],
+          "selected_fields": {
+            "remoteOnsite": [
+              "Remote"
+            ]
+          }
+        }
+      },
+      "items": {
+        "kind": "json",
+        "list": "$.refineSearch.data.jobs",
+        "fields": {
+          "id": "jobSeqNo",
+          "title": "title",
+          "location": "location",
+          "description": "descriptionTeaser"
+        },
+        "url_template": "https://careers.teksystems.com/us/en/job/{id}"
+      },
+      "detail_request": {
+        "method": "POST",
+        "url": "https://careers.teksystems.com/widgets",
+        "headers": {
+          "Accept": "application/json"
+        },
+        "body": {
+          "lang": "en_us",
+          "deviceType": "desktop",
+          "country": "united_states",
+          "pageName": "job-description",
+          "ddoKey": "jobDetail",
+          "jobSeqNo": "{id}",
+          "refNum": "TESYUS"
+        },
+        "description": "$.jobDetail.data.job.description"
+      },
+      "max_detail_requests": 20
     }
   ]
 }

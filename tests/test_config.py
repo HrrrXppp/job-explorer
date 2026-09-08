@@ -80,3 +80,37 @@ def test_operator_config_limits_remote_search_to_united_states() -> None:
     assert by_id["netflix"].search_request.query["query"] == "python"
     assert "2fcb99c455831013ea52fb338f2932d8" in by_id["nvidia"].search_request.body["appliedFacets"]["locationHierarchy1"]
     assert isinstance(by_id["stripe"].items.keep_if, list)
+    assert by_id["simplyhired"].search_request.query == {"q": "python", "l": "19707", "mi": "50"}
+    assert by_id["simplyhired_remote"].search_request.query == {"q": "python", "l": "Remote"}
+    assert by_id["dice"].search_request.query["location"] == "19707"
+    assert by_id["dice"].search_request.query["radius"] == "50"
+    assert by_id["dice_remote"].search_request.query["workplaceTypes"] == "Remote"
+    assert by_id["talent"].search_request.query == {"k": "python", "l": "19707", "radius": "50"}
+    assert by_id["talent_remote"].items.keep_if is not None
+    assert "Remote" in by_id["talent_remote"].items.keep_if.contains_any
+    assert "title" in by_id["talent_remote"].items.keep_if.fields
+    assert by_id["jobot"].search_request.body == {"query": "python", "location": "19707"}
+    assert by_id["jobot"].search_request.url == "https://jobot-com-api.jobot.net/rest/jobs/search"
+    assert by_id["jobot_remote"].search_request.body == {"query": "python", "commuteType": "remote"}
+    assert by_id["cybercoders"].search_request.query == {
+        "keyword": "python",
+        "locationKeyword": "Hockessin, Delaware",
+        "location": "39.7876,-75.6966",
+        "miles": "60",
+        "buid": "1",
+        "rows": "20",
+        "page": "1",
+    }
+    assert by_id["cybercoders_remote"].search_request.query["workLocationTypeId"] == "3"
+    assert by_id["cybercoders_remote"].search_request.query["keyword"] == "python"
+    assert by_id["teksystems"].search_request.body["keywords"] == "python"
+    assert by_id["teksystems"].search_request.body["selected_fields"]["state"] == [
+        "Delaware",
+        "Pennsylvania",
+        "Maryland",
+        "New Jersey",
+    ]
+    assert "Philadelphia" in by_id["teksystems"].search_request.body["selected_fields"]["city"]
+    assert by_id["teksystems_remote"].search_request.body["selected_fields"]["remoteOnsite"] == [
+        "Remote"
+    ]
