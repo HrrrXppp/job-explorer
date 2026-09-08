@@ -3,15 +3,15 @@ name: job-explorer-gmail-state
 description: >-
   Gmail API send/receive for job-explorer: OAuth refresh-token env vars,
   HTML report (new vs previous, sorted by match percent), and stateless
-  previous-position state stored in the last email. Use when changing email
+  previous-position state stored in the last three emails. Use when changing email
   format, Gmail client, MIME state, or related pytest.
 ---
 
 # Gmail report and email state
 
 The process stores **no local run history**. Previous positions, scores, and
-resume fingerprints are read from the **last job-explorer email** in the same
-mailbox.
+resume fingerprints are read from the **last three job-explorer emails** in the
+same mailbox (newest first).
 
 ## Auth (env only)
 
@@ -35,13 +35,18 @@ OAuth helper that prints the refresh token.
 
 1. `users.messages.list` with
    `q='subject:"[job-explorer]" filename:job-explorer-state.json'`
-   `maxResults=1`, `userId=me`.
+   `maxResults=3`, `userId=me`.
 2. If zero messages: previous set is empty (all positions are **new**).
-3. `users.messages.get` `format=full`; find MIME part
+3. For each listed message, `users.messages.get` `format=full`; find MIME part
    `filename=job-explorer-state.json` (or `Content-Disposition` filename).
    If `body.data` is missing, download with `messages.attachments.get`
    using `body.attachmentId` (Gmail omits inline data for larger parts).
-4. Base64url-decode JSON (**version 2**):
+   Base64url-decode JSON (**version 2**). Skip a message that is corrupt or
+   missing the attachment (log a warning; treat that message as empty).
+4. Merge newest-first: fingerprints from the newest email that has them;
+   cached `positions` newest-wins per id; `position_ids` is the union.
+
+Decoded JSON (**version 2**):
 
 ```json
 {
@@ -82,8 +87,8 @@ Subject: `[job-explorer] {n_new} new, {n_prev} previous · {date UTC}`
 
 ### HTML sections (required)
 
-1. **New positions** — ids not in previous email state.
-2. **Previous positions** — ids present in previous state.
+1. **New positions** — ids not in the merged last-three-email state.
+2. **Previous positions** — ids present in that merged state.
 
 Each section sorted by best match percent descending. Each row:
 
@@ -113,3 +118,4 @@ Build RFC 2822 with `email.message.EmailMessage`, then
   Google in CI.
 - First-run (no messages) → all new; no skip.
 - Malformed attachment → empty previous, no crash.
+- Last three emails: union of position ids; newest fingerprints and cached row win.

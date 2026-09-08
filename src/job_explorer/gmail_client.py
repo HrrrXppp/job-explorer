@@ -12,7 +12,7 @@ from google.oauth2.credentials import Credentials
 from googleapiclient.discovery import build
 
 from job_explorer.models import PreviousState
-from job_explorer.state import STATE_FILENAME, decode_state, empty_state
+from job_explorer.state import STATE_FILENAME, decode_state, empty_state, merge_previous_states
 
 logger = logging.getLogger(__name__)
 
@@ -21,6 +21,7 @@ GMAIL_SCOPES = [
     "https://www.googleapis.com/auth/gmail.readonly",
 ]
 SEARCH_QUERY = 'subject:"[job-explorer]" filename:job-explorer-state.json'
+PREVIOUS_EMAIL_LIMIT = 3
 FILENAME_RE = re.compile(r'filename\*?=(?:UTF-8\'\')?"?([^";\r\n]+)"?', re.I)
 
 
@@ -58,13 +59,16 @@ class GmailClient:
         listing = (
             self._service.users()
             .messages()
-            .list(userId=self._user_id, q=SEARCH_QUERY, maxResults=1)
+            .list(userId=self._user_id, q=SEARCH_QUERY, maxResults=PREVIOUS_EMAIL_LIMIT)
             .execute()
         )
         messages = listing.get("messages") or []
         if not messages:
             return empty_state()
-        message_id = messages[0]["id"]
+        states = [self._state_from_message(message["id"]) for message in messages]
+        return merge_previous_states(states)
+
+    def _state_from_message(self, message_id: str) -> PreviousState:
         message = (
             self._service.users()
             .messages()
@@ -73,11 +77,11 @@ class GmailClient:
         )
         part = _find_named_part(message.get("payload") or {}, STATE_FILENAME)
         if part is None:
-            logger.warning("last job-explorer email has no %s attachment", STATE_FILENAME)
+            logger.warning("job-explorer email %s has no %s attachment", message_id, STATE_FILENAME)
             return empty_state()
         raw = self._part_bytes(message_id, part)
         if not raw:
-            logger.warning("last job-explorer email has no %s attachment", STATE_FILENAME)
+            logger.warning("job-explorer email %s has no %s attachment", message_id, STATE_FILENAME)
             return empty_state()
         try:
             decoded = base64.urlsafe_b64decode(raw + "===")

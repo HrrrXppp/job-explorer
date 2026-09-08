@@ -7,7 +7,14 @@ import pytest
 import respx
 from bs4 import XMLParsedAsHTMLWarning
 
-from job_explorer.crawler import crawl_source, extract_description, extract_items, send_request
+from job_explorer.crawler import (
+    RequestFailed,
+    crawl_all,
+    crawl_source,
+    extract_description,
+    extract_items,
+    send_request,
+)
 from job_explorer.models import DetailSpec, HttpRequest, ItemsSpec, Source
 from tests.conftest import nosleep
 
@@ -113,9 +120,68 @@ async def test_retry_gives_up_with_http_error() -> None:
     respx.get("https://example.com/search").mock(return_value=httpx.Response(503, text="down"))
     request = HttpRequest(method="GET", url="https://example.com/search")
     async with httpx.AsyncClient() as client:
-        with pytest.raises(httpx.HTTPStatusError) as exc_info:
+        with pytest.raises(RequestFailed, match="GET https://example.com/search failed: HTTP 503"):
             await send_request(client, request, sleep=nosleep)
-    assert exc_info.value.response.status_code == 503
+
+
+@respx.mock
+async def test_disconnect_is_request_failed() -> None:
+    respx.get("https://example.com/search").mock(
+        side_effect=httpx.RemoteProtocolError("Server disconnected without sending a response.")
+    )
+    request = HttpRequest(method="GET", url="https://example.com/search")
+    async with httpx.AsyncClient() as client:
+        with pytest.raises(RequestFailed, match="GET https://example.com/search failed"):
+            await send_request(client, request, sleep=nosleep)
+
+
+@respx.mock
+async def test_one_failed_request_stops_remaining_sources() -> None:
+    first = respx.get("https://a.example/search").mock(return_value=httpx.Response(503, text="down"))
+    second = respx.get("https://b.example/search").mock(
+        return_value=httpx.Response(200, json={"results": []})
+    )
+    sources = [
+        _source(
+            id="first",
+            search_request=HttpRequest(method="GET", url="https://a.example/search"),
+        ),
+        _source(
+            id="second",
+            search_request=HttpRequest(method="GET", url="https://b.example/search"),
+        ),
+    ]
+    async with httpx.AsyncClient() as client:
+        with pytest.raises(RequestFailed, match="GET https://a.example/search failed"):
+            await crawl_all(client, sources, sleep=nosleep)
+    assert first.call_count == 3
+    assert second.call_count == 0
+
+
+@respx.mock
+async def test_one_failed_detail_stops_remaining_details() -> None:
+    respx.get("https://example.com/search").mock(
+        return_value=httpx.Response(
+            200,
+            json={
+                "results": [
+                    {"id": "1", "title": "A", "html_url": "/1"},
+                    {"id": "2", "title": "B", "html_url": "/2"},
+                ]
+            },
+        )
+    )
+    first = respx.get("https://example.com/jobs/1").mock(
+        side_effect=httpx.RemoteProtocolError("Server disconnected without sending a response.")
+    )
+    second = respx.get("https://example.com/jobs/2").mock(
+        return_value=httpx.Response(200, json=DETAIL_JSON)
+    )
+    async with httpx.AsyncClient() as client:
+        with pytest.raises(RequestFailed, match="GET https://example.com/jobs/1 failed"):
+            await crawl_source(client, _source(), sleep=nosleep)
+    assert first.call_count == 1
+    assert second.call_count == 0
 
 
 @respx.mock
@@ -268,6 +334,27 @@ def test_keep_if_drops_non_matching_location() -> None:
     items = extract_items(body, spec, base_url="https://example.com/")
     assert [item["id"] for item in items] == ["us"]
     assert items[0]["url"] == "https://example.com/us"
+
+
+def test_keep_if_list_requires_every_group() -> None:
+    body = """
+    {"results": [
+      {"id": "keep", "title": "Python engineer", "html_url": "/keep", "location": "USA Remote"},
+      {"id": "eu", "title": "Python engineer", "html_url": "/eu", "location": "Europe only"},
+      {"id": "us-java", "title": "Java engineer", "html_url": "/java", "location": "USA Remote"}
+    ]}
+    """
+    spec = ItemsSpec(
+        kind="json",
+        list="$.results",
+        fields={"id": "id", "title": "title", "url": "html_url", "location": "location"},
+        keep_if=[
+            {"fields": ["title"], "contains_any": ["Python"]},
+            {"fields": ["location"], "contains_any": ["USA", "United States"]},
+        ],
+    )
+    items = extract_items(body, spec, base_url="https://example.com/")
+    assert [item["id"] for item in items] == ["keep"]
 
 
 def test_keep_if_fields_must_exist_in_items_fields() -> None:

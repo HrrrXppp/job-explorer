@@ -23,6 +23,10 @@ TEMPLATE_RE = re.compile(r"\{([A-Za-z_][A-Za-z0-9_]*)\}")
 SleepFn = Callable[[float], Awaitable[None]]
 
 
+class RequestFailed(RuntimeError):
+    """A search or detail HTTP request failed; the run should stop."""
+
+
 class RetryableError(Exception):
     """Raised by the request function when the decorator should try again."""
 
@@ -38,9 +42,7 @@ def retry_http(*, attempts: int = 3) -> Callable:
                     return await func(*args, **kwargs)
                 except RetryableError as exc:
                     if attempt == attempts - 1:
-                        if isinstance(exc.__cause__, BaseException):
-                            raise exc.__cause__ from exc
-                        raise
+                        raise RequestFailed(str(exc)) from exc
                     logger.warning("retrying after %s", exc)
                     await sleep(delay)
                     delay *= 2
@@ -69,13 +71,23 @@ def apply_templates(value: Any, fields: dict[str, str]) -> Any:
 
 @retry_http()
 async def send_request(client: httpx.AsyncClient, request: HttpRequest) -> httpx.Response:
-    response = await client.request(**_httpx_kwargs(request))
+    try:
+        response = await client.request(**_httpx_kwargs(request))
+    except httpx.RequestError as exc:
+        raise RequestFailed(f"{request.method} {request.url} failed: {exc}") from exc
     if response.status_code in RETRY_STATUSES:
         try:
             response.raise_for_status()
         except httpx.HTTPStatusError as exc:
-            raise RetryableError(str(exc)) from exc
-    response.raise_for_status()
+            raise RetryableError(
+                f"{request.method} {request.url} failed: HTTP {response.status_code}"
+            ) from exc
+    try:
+        response.raise_for_status()
+    except httpx.HTTPStatusError as exc:
+        raise RequestFailed(
+            f"{request.method} {request.url} failed: HTTP {response.status_code}"
+        ) from exc
     return response
 
 
@@ -159,10 +171,8 @@ async def crawl_source(
         pending.append((len(crawled) - 1, item))
         detail_count += 1
     if pending:
-        descriptions = await asyncio.gather(
-            *[_fetch_description(client, source, item, sleep=sleep) for _, item in pending]
-        )
-        for (index, item), description in zip(pending, descriptions, strict=True):
+        for index, item in pending:
+            description = await _fetch_description(client, source, item, sleep=sleep)
             crawled[index] = CrawledItem(
                 id=f"{source.id}:{item['id']}",
                 source_id=source.id,
@@ -181,15 +191,12 @@ async def crawl_all(
     skip_detail_ids: set[str] | None = None,
     sleep: SleepFn = asyncio.sleep,
 ) -> list[CrawledItem]:
-    batches = await asyncio.gather(
-        *[
-            crawl_source(client, source, skip_detail_ids=skip_detail_ids, sleep=sleep)
-            for source in sources
-        ]
-    )
     items: list[CrawledItem] = []
     seen: set[str] = set()
-    for batch in batches:
+    for source in sources:
+        batch = await crawl_source(
+            client, source, skip_detail_ids=skip_detail_ids, sleep=sleep
+        )
         for item in batch:
             if item.id in seen:
                 logger.warning("duplicate position id %s", item.id)
@@ -316,8 +323,13 @@ def extract_items(
     if spec.url_template:
         for item in items:
             item["url"] = apply_templates(spec.url_template, item)
-    if spec.keep_if is not None:
-        items = [item for item in items if item_matches_keep_if(item, spec.keep_if)]
+    groups = spec.keep_if_groups()
+    if groups:
+        items = [
+            item
+            for item in items
+            if all(item_matches_keep_if(item, group) for group in groups)
+        ]
     return items
 
 
