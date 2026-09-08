@@ -7,6 +7,7 @@ import os
 import sys
 from collections.abc import Callable, Mapping, Sequence
 from datetime import datetime, timezone
+from pathlib import Path
 
 import httpx
 
@@ -73,7 +74,10 @@ async def run_explorer(
             await http_client.aclose()
 
     resume_texts = {spec.id: load_resume_text(spec.path) for spec in config.resumes}
-    matcher = encoder or build_encoder(config.matching.model)
+    cache_dir = Path(config.matching.cache_dir)
+    if not cache_dir.is_absolute():
+        cache_dir = Path(config.config_dir) / cache_dir
+    matcher = encoder or build_encoder(config.matching.model, cache_dir=cache_dir)
     cache = cached_by_id(previous)
     scored = score_crawled(crawled, resume_texts, matcher, cache)
     new_rows, previous_rows = split_new_previous(scored, previous.position_ids)

@@ -13,7 +13,7 @@ import httpx
 from bs4 import BeautifulSoup
 from jsonpath_ng.ext import parse as jsonpath_parse
 
-from job_explorer.models import CrawledItem, HttpRequest, ItemsSpec, Source
+from job_explorer.models import CrawledItem, HttpRequest, ItemsSpec, KeepIfSpec, Source
 from job_explorer.report import html_to_text
 
 logger = logging.getLogger(__name__)
@@ -211,6 +211,7 @@ async def _found_items(
         source.items,
         content_type=response.headers.get("content-type", ""),
         base_url=str(response.url),
+        source_id=source.id,
     )
 
 
@@ -247,6 +248,7 @@ async def _fetch_description(
         source.detail_request.description,
         kind=source.items.kind,
         base_url=str(response.url),
+        content_type=response.headers.get("content-type", ""),
     )
 
 
@@ -282,22 +284,46 @@ def stringify(value: Any) -> str:
     return str(value)
 
 
+def _is_xml_markup(body: str, content_type: str = "") -> bool:
+    ctype = content_type.lower()
+    if "html" in ctype:
+        return False
+    if any(token in ctype for token in ("xml", "rss", "atom")):
+        return True
+    stripped = body.lstrip()
+    return stripped.startswith(("<?xml", "<rss", "<feed", "<RDF"))
+
+
+def _soup(body: str, content_type: str = "") -> BeautifulSoup:
+    features = "lxml-xml" if _is_xml_markup(body, content_type) else "lxml"
+    return BeautifulSoup(body, features)
+
+
 def extract_items(
     body: str,
     spec: ItemsSpec,
     *,
     content_type: str = "",
     base_url: str = "",
+    source_id: str = "",
 ) -> list[dict[str, str]]:
-    del content_type
     if spec.kind == "json":
-        items = _extract_json_items(body, spec, base_url=base_url)
+        items = _extract_json_items(body, spec, base_url=base_url, source_id=source_id)
     else:
-        items = _extract_html_items(body, spec, base_url=base_url)
+        items = _extract_html_items(
+            body, spec, content_type=content_type, base_url=base_url, source_id=source_id
+        )
     if spec.url_template:
         for item in items:
             item["url"] = apply_templates(spec.url_template, item)
+    if spec.keep_if is not None:
+        items = [item for item in items if item_matches_keep_if(item, spec.keep_if)]
     return items
+
+
+def item_matches_keep_if(item: dict[str, str], keep_if: KeepIfSpec) -> bool:
+    blob = " ".join(item.get(name, "") for name in keep_if.fields).lower()
+    return any(needle.lower() in blob for needle in keep_if.contains_any)
 
 
 def extract_description(
@@ -306,11 +332,12 @@ def extract_description(
     *,
     kind: str,
     base_url: str = "",
+    content_type: str = "",
 ) -> str:
     if kind == "json":
         data = json.loads(body)
         return html_to_text(stringify(jsonpath_one(data, field)))
-    soup = BeautifulSoup(body, "lxml")
+    soup = _soup(body, content_type)
     selector, attr = split_field_ref(field)
     target = soup.select_one(selector) if selector else soup
     if target is None:
@@ -325,7 +352,9 @@ def extract_description(
     return str(value)
 
 
-def _extract_json_items(body: str, spec: ItemsSpec, *, base_url: str) -> list[dict[str, str]]:
+def _extract_json_items(
+    body: str, spec: ItemsSpec, *, base_url: str, source_id: str = ""
+) -> list[dict[str, str]]:
     data = json.loads(body)
     matches = jsonpath_values(data, spec.list)
     if len(matches) == 1 and isinstance(matches[0], list):
@@ -337,10 +366,12 @@ def _extract_json_items(body: str, spec: ItemsSpec, *, base_url: str) -> list[di
         try:
             parsed = _fields_from_json_row(row, spec, base_url=base_url)
         except Exception:
-            logger.warning("skipping item %s: parse error", index, exc_info=True)
+            logger.warning(
+                "skipping %s item %s: parse error", source_id or "source", index, exc_info=True
+            )
             continue
         if not parsed.get("id"):
-            logger.warning("skipping item %s: missing id", index)
+            logger.warning("skipping %s item %s: missing id", source_id or "source", index)
             continue
         items.append(parsed)
     return items
@@ -357,8 +388,15 @@ def _fields_from_json_row(row: Any, spec: ItemsSpec, *, base_url: str) -> dict[s
     return out
 
 
-def _extract_html_items(body: str, spec: ItemsSpec, *, base_url: str) -> list[dict[str, str]]:
-    soup = BeautifulSoup(body, "lxml")
+def _extract_html_items(
+    body: str,
+    spec: ItemsSpec,
+    *,
+    content_type: str = "",
+    base_url: str,
+    source_id: str = "",
+) -> list[dict[str, str]]:
+    soup = _soup(body, content_type)
     cards = soup.select(spec.list)
     items: list[dict[str, str]] = []
     for index, card in enumerate(cards):
@@ -369,10 +407,12 @@ def _extract_html_items(body: str, spec: ItemsSpec, *, base_url: str) -> list[di
                     card, field_ref, base_url=base_url if name == "url" else ""
                 )
         except Exception:
-            logger.warning("skipping html item %s: parse error", index, exc_info=True)
+            logger.warning(
+                "skipping %s item %s: parse error", source_id or "source", index, exc_info=True
+            )
             continue
         if not parsed.get("id"):
-            logger.warning("skipping html item %s: missing id", index)
+            logger.warning("skipping %s item %s: missing id", source_id or "source", index)
             continue
         items.append(parsed)
     return items

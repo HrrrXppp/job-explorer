@@ -1,8 +1,11 @@
 from __future__ import annotations
 
+import warnings
+
 import httpx
 import pytest
 import respx
+from bs4 import XMLParsedAsHTMLWarning
 
 from job_explorer.crawler import crawl_source, extract_description, extract_items, send_request
 from job_explorer.models import DetailSpec, HttpRequest, ItemsSpec, Source
@@ -180,11 +183,29 @@ def test_url_template_builds_job_link() -> None:
     assert items[0]["url"] == "https://careers.example.com/job/123"
 
 
-def test_json_skips_missing_id() -> None:
+def test_json_skips_missing_id(caplog) -> None:
     body = '{"results": [{"title": "x"}, {"id": "ok", "title": "y"}]}'
     spec = ItemsSpec(kind="json", list="$.results", fields={"id": "id", "title": "title"})
-    items = extract_items(body, spec)
+    items = extract_items(body, spec, source_id="example")
     assert [item["id"] for item in items] == ["ok"]
+    assert "skipping example item 0: missing id" in caplog.text
+
+
+def test_jsonpath_filter_skips_objects_without_id(caplog) -> None:
+    body = """
+    [
+      {"legal": "credit the source"},
+      {"id": "113", "position": "Python"}
+    ]
+    """
+    spec = ItemsSpec(
+        kind="json",
+        list="$[?(@.id)]",
+        fields={"id": "id", "title": "position"},
+    )
+    items = extract_items(body, spec, source_id="remoteok")
+    assert [item["id"] for item in items] == ["113"]
+    assert "missing id" not in caplog.text
 
 
 def test_html_items() -> None:
@@ -200,6 +221,63 @@ def test_html_items() -> None:
     items = extract_items(HTML_BODY, spec, base_url="https://example.com/")
     assert items[0] == {"id": "1", "title": "One", "url": "https://example.com/jobs/1"}
     assert items[1]["id"] == "2"
+
+
+def test_rss_items_use_xml_parser() -> None:
+    rss = """<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0">
+  <channel>
+    <item>
+      <title>Python role</title>
+      <guid>https://example.com/jobs/99</guid>
+      <description>Remote Python</description>
+    </item>
+  </channel>
+</rss>
+"""
+    spec = ItemsSpec(
+        kind="html",
+        list="item",
+        fields={"id": "guid", "title": "title", "description": "description"},
+        url_template="{id}",
+    )
+    with warnings.catch_warnings():
+        warnings.simplefilter("error", XMLParsedAsHTMLWarning)
+        items = extract_items(
+            rss, spec, content_type="application/rss+xml; charset=utf-8"
+        )
+    assert items[0]["id"] == "https://example.com/jobs/99"
+    assert items[0]["title"] == "Python role"
+    assert items[0]["url"] == "https://example.com/jobs/99"
+    assert "Remote Python" in items[0]["description"]
+
+
+def test_keep_if_drops_non_matching_location() -> None:
+    body = """
+    {"results": [
+      {"id": "us", "title": "US role", "html_url": "/us", "location": "USA, Canada"},
+      {"id": "eu", "title": "EU role", "html_url": "/eu", "location": "Europe only"}
+    ]}
+    """
+    spec = ItemsSpec(
+        kind="json",
+        list="$.results",
+        fields={"id": "id", "title": "title", "url": "html_url", "location": "location"},
+        keep_if={"fields": ["location"], "contains_any": ["USA", "United States"]},
+    )
+    items = extract_items(body, spec, base_url="https://example.com/")
+    assert [item["id"] for item in items] == ["us"]
+    assert items[0]["url"] == "https://example.com/us"
+
+
+def test_keep_if_fields_must_exist_in_items_fields() -> None:
+    with pytest.raises(ValueError, match="keep_if.fields"):
+        ItemsSpec(
+            kind="json",
+            list="$.results",
+            fields={"id": "id", "title": "title"},
+            keep_if={"fields": ["location"], "contains_any": ["USA"]},
+        )
 
 
 def test_description_field_from_detail_json() -> None:

@@ -1,6 +1,18 @@
 from __future__ import annotations
 
-from job_explorer.matching import fingerprint_file, load_resume_text, match_percent, score_descriptions
+import sys
+import types
+from pathlib import Path
+
+from job_explorer.matching import (
+    build_encoder,
+    fingerprint_file,
+    load_resume_text,
+    match_percent,
+    model_snapshot_dir,
+    score_descriptions,
+    snapshot_is_present,
+)
 from tests.conftest import write_docx
 
 
@@ -51,3 +63,58 @@ def test_ordering_higher_cosine_first() -> None:
         encoder,
     )
     assert scores["a"]["r"] > scores["b"]["r"]
+
+
+def test_model_snapshot_dir_slugs_hub_id(tmp_path: Path) -> None:
+    dest = model_snapshot_dir("sentence-transformers/all-MiniLM-L6-v2", tmp_path)
+    assert dest == tmp_path / "sentence-transformers--all-MiniLM-L6-v2"
+    assert not snapshot_is_present(dest)
+
+
+def _install_fake_sentence_transformer(monkeypatch, *, inits: list, save_writes_marker: bool = True):
+    class FakeST:
+        def __init__(self, name, local_files_only=False, **kwargs):
+            inits.append((str(name), local_files_only))
+            if local_files_only and not Path(name).joinpath("modules.json").is_file():
+                raise OSError("not in local cache")
+
+        def save(self, path) -> None:
+            dest = Path(path)
+            dest.mkdir(parents=True, exist_ok=True)
+            if save_writes_marker:
+                (dest / "modules.json").write_text("[]")
+
+        def encode(self, texts, normalize_embeddings=False):
+            return [[1.0, 0.0] for _ in texts]
+
+    fake_mod = types.ModuleType("sentence_transformers")
+    fake_mod.SentenceTransformer = FakeST
+    monkeypatch.setitem(sys.modules, "sentence_transformers", fake_mod)
+
+
+def test_build_encoder_uses_snapshot_when_present(tmp_path: Path, monkeypatch) -> None:
+    dest = tmp_path / "sentence-transformers--all-MiniLM-L6-v2"
+    dest.mkdir()
+    (dest / "modules.json").write_text("[]")
+    inits: list[tuple[str, bool]] = []
+    _install_fake_sentence_transformer(monkeypatch, inits=inits)
+
+    encoder = build_encoder("sentence-transformers/all-MiniLM-L6-v2", cache_dir=tmp_path)
+
+    assert inits == [(str(dest), True)]
+    assert encoder.encode(["hi"]) == [[1.0, 0.0]]
+
+
+def test_build_encoder_downloads_once_then_reuses_snapshot(tmp_path: Path, monkeypatch) -> None:
+    inits: list[tuple[str, bool]] = []
+    _install_fake_sentence_transformer(monkeypatch, inits=inits)
+    model = "sentence-transformers/all-MiniLM-L6-v2"
+    dest = tmp_path / "sentence-transformers--all-MiniLM-L6-v2"
+
+    build_encoder(model, cache_dir=tmp_path)
+    assert inits == [(model, True), (model, False)]
+    assert snapshot_is_present(dest)
+
+    inits.clear()
+    build_encoder(model, cache_dir=tmp_path)
+    assert inits == [(str(dest), True)]

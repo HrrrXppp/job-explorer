@@ -42,13 +42,19 @@ score = round(max(0.0, float(cosine_similarity(r_vec, j_vec))) * 100.0, 1)
 
 ## Runtime
 
-- Load the model from local cache (`TRANSFORMERS_CACHE` / HF hub cache).
-- First developer run may download weights; CI should use mocks or a
-  pre-cached model, not network.
+- Persist a snapshot under `{config_dir}/.models/<slug>` (hub id with `/`
+  replaced by `--`). Override with `matching.cache_dir` (default `.models`).
+- Ready when `modules.json` exists: load that folder with
+  `SentenceTransformer(path, local_files_only=True)` — no huggingface.co.
+- Otherwise try the Hugging Face hub cache (`local_files_only=True`), else
+  download once, then `model.save()` into the snapshot dir.
+- Gitignore `.models/`. CI injects a fake encoder; pytest must not download.
 
 ## Tests
 
 - Unit: inject a fake encoder that returns known vectors; assert percents.
+- Snapshot: if `modules.json` exists, `build_encoder` loads that folder only;
+  otherwise it downloads once, `save()`s, and reuses the snapshot next call.
 - DOCX fixture: known paragraph text extracted.
 - Empty description → 0.0, no exception.
 - Ordering: higher cosine sorts first in the report input list.

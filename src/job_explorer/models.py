@@ -46,11 +46,19 @@ class HttpRequest(FrozenModel):
         return {str(key): str(item) for key, item in value.items()}
 
 
+class KeepIfSpec(FrozenModel):
+    """Drop extracted items unless any named field contains any of the needles."""
+
+    fields: list[str] = Field(min_length=1)
+    contains_any: list[str] = Field(min_length=1)
+
+
 class ItemsSpec(FrozenModel):
     kind: Literal["json", "html"]
     list: str
     fields: dict[str, str]
     url_template: str | None = None
+    keep_if: KeepIfSpec | None = None
 
     @field_validator("fields")
     @classmethod
@@ -66,6 +74,15 @@ class ItemsSpec(FrozenModel):
             return None
         stripped = value.strip()
         return stripped or None
+
+    @model_validator(mode="after")
+    def keep_if_fields_exist(self) -> ItemsSpec:
+        if self.keep_if is None:
+            return self
+        missing = [name for name in self.keep_if.fields if name not in self.fields]
+        if missing:
+            raise ValueError(f"keep_if.fields must be keys in items.fields: {missing}")
+        return self
 
 
 class DetailSpec(FrozenModel):
@@ -132,6 +149,7 @@ class EmailSpec(FrozenModel):
 
 class MatchingSpec(FrozenModel):
     model: str = DEFAULT_MODEL
+    cache_dir: str = ".models"
 
 
 class AppConfig(FrozenModel):
