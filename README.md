@@ -60,7 +60,7 @@ Set `user_agent` once. It is sent on every search and detail request (advertise 
 ### Matching
 
 - Resumes are `.docx` files on disk.
-- Default local model: `sentence-transformers/all-MiniLM-L6-v2`.
+- Default local model: `sentence-transformers/all-MiniLM-L6-v2`. The first run downloads it into `.models/` next to `config.json`; later runs load that snapshot and do not contact Hugging Face.
 - Score is `max(0, cosine) * 100`, one decimal. With several resumes, the sort key is the best score.
 
 ## Tests

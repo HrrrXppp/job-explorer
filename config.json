@@ -462,6 +462,359 @@
         },
         "description": "$.jobPostingInfo.jobDescription"
       }
+    },
+    {
+      "id": "workingnomads",
+      "search_request": {
+        "method": "POST",
+        "url": "https://www.workingnomads.com/jobsapi/_search",
+        "headers": {
+          "Accept": "application/json"
+        },
+        "body": {
+          "from": 0,
+          "size": 50,
+          "query": {
+            "query_string": {
+              "query": "python AND (locations:USA OR locations:\"North America\" OR locations:Anywhere)"
+            }
+          }
+        }
+      },
+      "items": {
+        "kind": "json",
+        "list": "$.hits.hits",
+        "fields": {
+          "id": "_source.id",
+          "title": "_source.title",
+          "description": "_source.description"
+        },
+        "url_template": "https://www.workingnomads.com/job/go/{id}/"
+      }
+    },
+    {
+      "id": "remotive",
+      "search_request": {
+        "method": "GET",
+        "url": "https://remotive.com/api/remote-jobs",
+        "headers": {
+          "Accept": "application/json"
+        },
+        "query": {
+          "search": "python",
+          "limit": "20"
+        }
+      },
+      "items": {
+        "kind": "json",
+        "list": "$.jobs",
+        "fields": {
+          "id": "id",
+          "title": "title",
+          "url": "url",
+          "description": "description",
+          "location": "candidate_required_location"
+        },
+        "keep_if": {
+          "fields": ["location"],
+          "contains_any": [
+            "United States",
+            "USA",
+            "U.S.",
+            "North America",
+            "Americas",
+            "Worldwide",
+            "Anywhere"
+          ]
+        }
+      }
+    },
+    {
+      "id": "remoteok",
+      "search_request": {
+        "method": "GET",
+        "url": "https://remoteok.com/api",
+        "headers": {
+          "Accept": "application/json"
+        },
+        "query": {
+          "tag": "python"
+        }
+      },
+      "items": {
+        "kind": "json",
+        "list": "$[?(@.id)]",
+        "fields": {
+          "id": "id",
+          "title": "position",
+          "url": "url",
+          "description": "description",
+          "location": "location"
+        },
+        "keep_if": {
+          "fields": ["location"],
+          "contains_any": [
+            "United States",
+            "USA",
+            "U.S.",
+            "North America",
+            "Americas",
+            "Worldwide",
+            "Anywhere"
+          ]
+        }
+      }
+    },
+    {
+      "id": "jobicy",
+      "search_request": {
+        "method": "GET",
+        "url": "https://jobicy.com/api/v2/remote-jobs",
+        "headers": {
+          "Accept": "application/json"
+        },
+        "query": {
+          "count": "20",
+          "tag": "python",
+          "geo": "usa"
+        }
+      },
+      "items": {
+        "kind": "json",
+        "list": "$.jobs",
+        "fields": {
+          "id": "id",
+          "title": "jobTitle",
+          "url": "url",
+          "description": "jobDescription"
+        }
+      }
+    },
+    {
+      "id": "himalayas",
+      "search_request": {
+        "method": "GET",
+        "url": "https://himalayas.app/jobs/api/search",
+        "headers": {
+          "Accept": "application/json"
+        },
+        "query": {
+          "q": "python",
+          "sort": "recent",
+          "country": "US"
+        }
+      },
+      "items": {
+        "kind": "json",
+        "list": "$.jobs",
+        "fields": {
+          "id": "guid",
+          "title": "title",
+          "url": "applicationLink",
+          "description": "description"
+        }
+      }
+    },
+    {
+      "id": "themuse",
+      "search_request": {
+        "method": "GET",
+        "url": "https://www.themuse.com/api/public/jobs",
+        "headers": {
+          "Accept": "application/json"
+        },
+        "query": {
+          "page": "0",
+          "descending": "true",
+          "category": "Software Engineering",
+          "location": "Flexible / Remote"
+        }
+      },
+      "items": {
+        "kind": "json",
+        "list": "$.results",
+        "fields": {
+          "id": "id",
+          "title": "name",
+          "url": "refs.landing_page",
+          "description": "contents"
+        }
+      }
+    },
+    {
+      "id": "landingjobs",
+      "search_request": {
+        "method": "GET",
+        "url": "https://landing.jobs/api/v1/jobs",
+        "headers": {
+          "Accept": "application/json"
+        },
+        "query": {
+          "remote": "true",
+          "q": "python"
+        }
+      },
+      "items": {
+        "kind": "json",
+        "list": "$",
+        "fields": {
+          "id": "id",
+          "title": "title",
+          "url": "url",
+          "description": "role_description",
+          "location": "locations"
+        },
+        "keep_if": {
+          "fields": ["location"],
+          "contains_any": [
+            "United States",
+            "USA",
+            "\"US\""
+          ]
+        }
+      }
+    },
+    {
+      "id": "weworkremotely",
+      "search_request": {
+        "method": "GET",
+        "url": "https://weworkremotely.com/categories/remote-programming-jobs.rss",
+        "headers": {
+          "Accept": "application/rss+xml, application/xml, text/xml"
+        }
+      },
+      "items": {
+        "kind": "html",
+        "list": "item",
+        "fields": {
+          "id": "guid",
+          "title": "title",
+          "description": "description"
+        },
+        "url_template": "{id}"
+      }
+    },
+    {
+      "id": "pythonorg",
+      "search_request": {
+        "method": "GET",
+        "url": "https://www.python.org/jobs/feed/rss/",
+        "headers": {
+          "Accept": "application/rss+xml, application/xml, text/xml"
+        }
+      },
+      "items": {
+        "kind": "html",
+        "list": "item",
+        "fields": {
+          "id": "guid",
+          "title": "title",
+          "description": "description"
+        },
+        "url_template": "{id}",
+        "keep_if": {
+          "fields": ["title", "description"],
+          "contains_any": [
+            "United States",
+            "USA",
+            "U.S.",
+            "North America",
+            "Americas",
+            "Worldwide",
+            "Anywhere"
+          ]
+        }
+      }
+    },
+    {
+      "id": "jobspresso",
+      "search_request": {
+        "method": "GET",
+        "url": "https://jobspresso.co/feed/",
+        "headers": {
+          "Accept": "application/rss+xml, application/xml, text/xml"
+        },
+        "query": {
+          "post_type": "job_listing"
+        }
+      },
+      "items": {
+        "kind": "html",
+        "list": "item",
+        "fields": {
+          "id": "guid",
+          "title": "title",
+          "description": "description"
+        },
+        "url_template": "{id}",
+        "keep_if": {
+          "fields": ["title", "description"],
+          "contains_any": [
+            "United States",
+            "USA",
+            "U.S.",
+            "North America",
+            "Americas",
+            "Worldwide",
+            "Anywhere"
+          ]
+        }
+      }
+    },
+    {
+      "id": "skipthedrive",
+      "search_request": {
+        "method": "GET",
+        "url": "https://www.skipthedrive.com/job-category/remote-python-jobs/",
+        "headers": {
+          "Accept": "text/html"
+        }
+      },
+      "items": {
+        "kind": "html",
+        "list": "h2.entry-title",
+        "fields": {
+          "id": "a@href",
+          "title": "a",
+          "url": "a@href"
+        }
+      },
+      "detail_request": {
+        "method": "GET",
+        "url": "{url}",
+        "headers": {
+          "Accept": "text/html"
+        },
+        "description": ".entry-content"
+      },
+      "max_detail_requests": 20
+    },
+    {
+      "id": "4dayweek",
+      "search_request": {
+        "method": "GET",
+        "url": "https://4dayweek.io/api/v2/jobs",
+        "headers": {
+          "Accept": "application/json"
+        },
+        "query": {
+          "q": "python",
+          "limit": "20",
+          "country": "United States",
+          "work_arrangement": "remote"
+        }
+      },
+      "items": {
+        "kind": "json",
+        "list": "$.data",
+        "fields": {
+          "id": "id",
+          "title": "title",
+          "slug": "slug",
+          "description": "description"
+        },
+        "url_template": "https://4dayweek.io/job/{slug}"
+      }
     }
   ]
 }

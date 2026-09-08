@@ -60,3 +60,19 @@ def test_default_user_agent_when_omitted() -> None:
     del raw["user_agent"]
     config = parse_config(raw, config_dir="/tmp")
     assert config.user_agent == "job-explorer/0.1"
+
+
+OPERATOR = Path(__file__).resolve().parents[1] / "config.json"
+
+
+def test_operator_config_limits_remote_search_to_united_states() -> None:
+    raw = json.loads(OPERATOR.read_text(encoding="utf-8"))
+    config = parse_config(raw, config_dir=".")
+    by_id = {source.id: source for source in config.sources}
+    assert "worldwide" not in by_id["himalayas"].search_request.query
+    assert by_id["himalayas"].search_request.query["country"] == "US"
+    assert by_id["jobicy"].search_request.query["geo"] == "usa"
+    assert by_id["4dayweek"].search_request.query["country"] == "United States"
+    assert "locations:USA" in by_id["workingnomads"].search_request.body["query"]["query_string"]["query"]
+    assert by_id["remotive"].items.keep_if is not None
+    assert by_id["remoteok"].items.keep_if is not None

@@ -83,9 +83,19 @@ Position identity: `{source_id}:{item.id}` (string). Required extract field:
 
 `fields.id` is required: the operator names which field is the item id.
 
+`list` may use a JSONPath filter so preamble objects are never selected.
+Remote OK’s feed is a root array whose first object is a legal notice with no
+`id` — use `"list": "$[?(@.id)]"`.
+
 Optional `url_template` is filled from extracted fields (`{id}`, `{title}`, …)
 when the search payload has no job URL. Example:
 `https://careers.example.com/jobs/{id}`.
+
+Optional `keep_if` drops items after extract unless any listed field contains
+any of `contains_any` (case-insensitive substring). Use it when the search
+HTTP API has no country/location query. Example: keep United States–eligible
+remote jobs via a `location` field and needles like `USA`, `United States`,
+`Worldwide`. `keep_if.fields` must be keys in `items.fields`.
 
 Skip items missing `id`. Log and continue on a single item parse error.
 

@@ -1,14 +1,21 @@
 from __future__ import annotations
 
 import hashlib
+import logging
 import math
-from collections.abc import Sequence
+import os
+from collections.abc import Iterator, Sequence
+from contextlib import contextmanager
 from pathlib import Path
 from typing import Protocol
 
 from docx import Document
 
 from job_explorer.models import ResumeSpec
+
+logger = logging.getLogger(__name__)
+
+SNAPSHOT_MARKER = "modules.json"
 
 
 class Encoder(Protocol):
@@ -24,7 +31,34 @@ class SentenceTransformerEncoder:
         return [list(map(float, row)) for row in vectors]
 
 
-def build_encoder(model_name: str) -> Encoder:
+def model_snapshot_dir(model_name: str, cache_dir: str | Path) -> Path:
+    given = Path(model_name)
+    if given.exists() and given.is_dir():
+        return given
+    return Path(cache_dir) / model_name.replace("/", "--")
+
+
+def snapshot_is_present(path: Path) -> bool:
+    return (path / SNAPSHOT_MARKER).is_file()
+
+
+@contextmanager
+def _huggingface_offline() -> Iterator[None]:
+    keys = ("HF_HUB_OFFLINE", "TRANSFORMERS_OFFLINE")
+    previous = {key: os.environ.get(key) for key in keys}
+    os.environ["HF_HUB_OFFLINE"] = "1"
+    os.environ["TRANSFORMERS_OFFLINE"] = "1"
+    try:
+        yield
+    finally:
+        for key, value in previous.items():
+            if value is None:
+                os.environ.pop(key, None)
+            else:
+                os.environ[key] = value
+
+
+def build_encoder(model_name: str, cache_dir: str | Path = ".models") -> Encoder:
     try:
         from sentence_transformers import SentenceTransformer
     except ImportError as exc:
@@ -32,7 +66,23 @@ def build_encoder(model_name: str) -> Encoder:
             "sentence-transformers is required to match resumes. "
             "Install with: uv sync --extra ml"
         ) from exc
-    return SentenceTransformerEncoder(SentenceTransformer(model_name))
+
+    dest = model_snapshot_dir(model_name, cache_dir)
+    if snapshot_is_present(dest):
+        logger.info("loading embedding model from %s", dest)
+        with _huggingface_offline():
+            model = SentenceTransformer(str(dest), local_files_only=True)
+        return SentenceTransformerEncoder(model)
+
+    logger.info("downloading embedding model %s (saving to %s)", model_name, dest)
+    try:
+        with _huggingface_offline():
+            model = SentenceTransformer(model_name, local_files_only=True)
+    except Exception:
+        model = SentenceTransformer(model_name)
+    dest.mkdir(parents=True, exist_ok=True)
+    model.save(str(dest))
+    return SentenceTransformerEncoder(model)
 
 
 def load_resume_text(path: str | Path) -> str:

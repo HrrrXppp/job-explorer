@@ -4,7 +4,8 @@
     { "id": "primary", "path": "resumes/primary.docx" }
   ],
   "matching": {
-    "model": "sentence-transformers/all-MiniLM-L6-v2"
+    "model": "sentence-transformers/all-MiniLM-L6-v2",
+    "cache_dir": ".models"
   },
   "email": {
     "to": ["me@example.com"]
