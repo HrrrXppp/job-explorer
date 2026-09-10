@@ -90,7 +90,10 @@ Subject: `[job-explorer] {n_new} new, {n_prev} previous · {date UTC}`
 1. **New positions** — ids not in the merged last-three-email state.
 2. **Previous positions** — ids present in that merged state.
 
-Each section sorted by best match percent descending. Each row:
+Each section sorted by best match percent descending. Positions whose **best**
+match is **20.0% or lower** are omitted from the HTML (and from the subject
+counts) but **remain in the JSON attachment** so the next run still treats them
+as processed. Each visible row:
 
 - match % (one decimal)
 - title (link to job url if present)
@@ -98,7 +101,8 @@ Each section sorted by best match percent descending. Each row:
 - best resume id
 - optional one-line snippet of description (omit when detail was skipped)
 
-If a section is empty, still render the heading and "None".
+If a section is empty (including when every row was ≤ 20%), still render the
+heading and "None".
 
 Do not omit the JSON attachment even when there are zero positions (empty
 `positions` and current `resume_fingerprints`).
@@ -114,6 +118,7 @@ Build RFC 2822 with `email.message.EmailMessage`, then
 - Classification: new vs previous given a previous id set.
 - `resumes_unchanged(current, previous)` true only on exact id→hash match.
 - HTML contains both section headings and order by percent.
+- HTML omits best match ≤ 20%; the JSON attachment still lists those ids.
 - Gmail client unit tests mock `googleapiclient.discovery.build`; do not call
   Google in CI.
 - First-run (no messages) → all new; no skip.

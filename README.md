@@ -40,7 +40,7 @@ Create a Gmail OAuth desktop client and store a refresh token in `GMAIL_REFRESH_
 4. Execute each source’s **search** request and extract job items with per-source rules.
 5. Issue **detail** requests only when needed: new jobs, or resumes that changed. Old jobs with unchanged resumes reuse cached scores (no detail HTTP).
 6. Score fetched descriptions against resumes (cosine similarity as a percent).
-7. Send one Gmail message: **New positions** then **Previous positions**, each sorted by match percent descending, plus a JSON state attachment for the next run.
+7. Send one Gmail message: **New positions** then **Previous positions**, each sorted by match percent descending. Matches at **20% or below** are omitted from the HTML (and subject counts) but stay in the JSON state attachment so they remain processed.
 
 ## Configuration
 

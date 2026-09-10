@@ -110,7 +110,8 @@ Source-specific API keys may appear only as `${VAR}` placeholders inside
 - Embed once per resume, once per job description.
 - Score = `max(0, cosine(resume, job)) * 100`, one decimal.
 - If several resumes exist, record **every** resume score; the sort key is the
-  **best** score for that position. Email shows best % and which resume.
+  **best** score for that position. Email HTML shows best % and which resume
+  for matches **above 20%**; ≤ 20% stays in the state attachment only.
 
 ## Pytest
 
