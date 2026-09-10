@@ -11,7 +11,12 @@ from job_explorer.models import ScoredPosition
 from job_explorer.state import STATE_FILENAME, encode_state
 
 SUBJECT_PREFIX = "[job-explorer]"
+EMAIL_MIN_PERCENT = 20.0
 _HTML_TAG = re.compile(r"</?[a-zA-Z][^>]*>")
+
+
+def email_visible_rows(rows: list[ScoredPosition]) -> list[ScoredPosition]:
+    return [row for row in rows if row.best_percent > EMAIL_MIN_PERCENT]
 
 
 def html_to_text(value: str | None) -> str:
@@ -37,8 +42,8 @@ def render_html(
     parts = [
         "<html><body>",
         "<h1>Job explorer report</h1>",
-        _section("New positions", new_rows),
-        _section("Previous positions", previous_rows),
+        _section("New positions", email_visible_rows(new_rows)),
+        _section("Previous positions", email_visible_rows(previous_rows)),
         "</body></html>",
     ]
     return "\n".join(parts)
@@ -94,10 +99,12 @@ def build_message(
 ) -> EmailMessage:
     html_body = render_html(new_rows, previous_rows)
     state_json = encode_state(fingerprints, new_rows + previous_rows)
+    visible_new = email_visible_rows(new_rows)
+    visible_previous = email_visible_rows(previous_rows)
     message = EmailMessage()
     message["From"] = sender
     message["To"] = ", ".join(to)
-    message["Subject"] = subject_line(len(new_rows), len(previous_rows), when)
+    message["Subject"] = subject_line(len(visible_new), len(visible_previous), when)
     message.set_content("HTML report attached; open in an HTML-capable client.")
     message.add_alternative(html_body, subtype="html")
     message.add_attachment(
