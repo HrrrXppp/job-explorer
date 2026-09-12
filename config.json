@@ -2203,6 +2203,178 @@
         },
         "description": "$.jobPostingInfo.jobDescription"
       }
+    },
+    {
+      "id": "affirm",
+      "search_request": {
+        "method": "GET",
+        "url": "https://boards-api.greenhouse.io/v1/boards/affirm/jobs",
+        "headers": {
+          "Accept": "application/json"
+        },
+        "query": {
+          "content": "true"
+        }
+      },
+      "items": {
+        "kind": "json",
+        "list": "$.jobs",
+        "fields": {
+          "id": "id",
+          "title": "title",
+          "url": "absolute_url",
+          "description": "content",
+          "location": "location.name"
+        },
+        "keep_if": [
+          {
+            "fields": [
+              "title",
+              "description"
+            ],
+            "contains_any": [
+              "python"
+            ]
+          },
+          {
+            "fields": [
+              "location"
+            ],
+            "contains_any": [
+              "19707",
+              "Hockessin",
+              "Wilmington",
+              "Philadelphia",
+              "West Chester",
+              "Malvern",
+              "Wayne",
+              "Conshohocken",
+              "Cherry Hill",
+              "Camden",
+              "Mount Laurel",
+              "Delaware",
+              "Pennsylvania",
+              "New Jersey",
+              "Maryland"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "pnc",
+      "search_request": {
+        "method": "POST",
+        "url": "https://careers.pnc.com/widgets",
+        "headers": {
+          "Accept": "application/json"
+        },
+        "body": {
+          "lang": "en_global",
+          "deviceType": "desktop",
+          "country": "united_states",
+          "pageName": "search-results",
+          "ddoKey": "refineSearch",
+          "from": 0,
+          "jobs": true,
+          "counts": true,
+          "size": 20,
+          "keywords": "python",
+          "global": true,
+          "refNum": "PNC1GLOBAL",
+          "all_fields": [
+            "city",
+            "state",
+            "category",
+            "type",
+            "country",
+            "remoteOnsite"
+          ],
+          "selected_fields": {
+            "city": [
+              "Philadelphia",
+              "Wilmington"
+            ]
+          }
+        }
+      },
+      "items": {
+        "kind": "json",
+        "list": "$.refineSearch.data.jobs",
+        "fields": {
+          "id": "jobSeqNo",
+          "title": "title",
+          "location": "multi_location",
+          "description": "descriptionTeaser"
+        },
+        "keep_if": {
+          "fields": [
+            "location"
+          ],
+          "contains_any": [
+            "Philadelphia",
+            "Wilmington"
+          ]
+        },
+        "url_template": "https://careers.pnc.com/global/en/job/{id}"
+      },
+      "detail_request": {
+        "method": "POST",
+        "url": "https://careers.pnc.com/widgets",
+        "headers": {
+          "Accept": "application/json"
+        },
+        "body": {
+          "lang": "en_global",
+          "deviceType": "desktop",
+          "country": "united_states",
+          "pageName": "job-description",
+          "ddoKey": "jobDetail",
+          "jobSeqNo": "{id}",
+          "refNum": "PNC1GLOBAL"
+        },
+        "description": "$.jobDetail.data.job.description"
+      },
+      "max_detail_requests": 20
+    },
+    {
+      "id": "td",
+      "search_request": {
+        "method": "POST",
+        "url": "https://td.wd3.myworkdayjobs.com/wday/cxs/td/TD_Bank_Careers/jobs",
+        "headers": {
+          "Accept": "application/json"
+        },
+        "body": {
+          "appliedFacets": {
+            "locations": [
+              "dafbf576c2d210009455f92c07850000",
+              "dafbf576c2d210009452aad5856b0000"
+            ]
+          },
+          "limit": 20,
+          "offset": 0,
+          "searchText": "Python"
+        }
+      },
+      "items": {
+        "kind": "json",
+        "list": "$.jobPostings",
+        "fields": {
+          "id": "bulletFields[0]",
+          "title": "title",
+          "externalPath": "externalPath"
+        },
+        "url_template": "https://td.wd3.myworkdayjobs.com/en-US/TD_Bank_Careers{externalPath}"
+      },
+      "detail_request": {
+        "method": "GET",
+        "url": "https://td.wd3.myworkdayjobs.com/wday/cxs/td/TD_Bank_Careers{externalPath}",
+        "headers": {
+          "Accept": "application/json"
+        },
+        "description": "$.jobPostingInfo.jobDescription"
+      }
     }
   ]
 }

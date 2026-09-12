@@ -125,3 +125,27 @@ def test_operator_config_limits_remote_search_to_united_states() -> None:
     assert "United States" in by_id["cencora_remote"].items.keep_if.contains_any
     assert by_id["gsk"].search_request.body["searchText"] == "Python"
     assert "90793f76afe70136bdc7d0ebdf14c8bb" in by_id["gsk"].search_request.body["appliedFacets"]["locations"]
+    assert by_id["affirm"].search_request.url == "https://boards-api.greenhouse.io/v1/boards/affirm/jobs"
+    assert by_id["affirm"].search_request.query["content"] == "true"
+    assert isinstance(by_id["affirm"].items.keep_if, list)
+    assert "19707" in by_id["affirm"].items.keep_if[1].contains_any
+    assert "Philadelphia" in by_id["affirm"].items.keep_if[1].contains_any
+    assert "Remote US" not in by_id["affirm"].items.keep_if[1].contains_any
+    assert by_id["pnc"].search_request.url == "https://careers.pnc.com/widgets"
+    assert by_id["pnc"].search_request.body["keywords"] == "python"
+    assert by_id["pnc"].search_request.body["refNum"] == "PNC1GLOBAL"
+    assert by_id["pnc"].search_request.body["selected_fields"]["city"] == [
+        "Philadelphia",
+        "Wilmington",
+    ]
+    assert "Philadelphia" in by_id["pnc"].items.keep_if.contains_any
+    assert "Wilmington" in by_id["pnc"].items.keep_if.contains_any
+    assert by_id["td"].search_request.body["searchText"] == "Python"
+    assert "dafbf576c2d210009455f92c07850000" in by_id["td"].search_request.body["appliedFacets"][
+        "locations"
+    ]
+    assert "dafbf576c2d210009452aad5856b0000" in by_id["td"].search_request.body["appliedFacets"][
+        "locations"
+    ]
+    assert "pnc_remote" not in by_id
+    assert "td_remote" not in by_id
