@@ -1896,6 +1896,313 @@
         "description": "$.jobDetail.data.job.description"
       },
       "max_detail_requests": 20
+    },
+    {
+      "id": "vanguard",
+      "search_request": {
+        "method": "POST",
+        "url": "https://vanguard.wd5.myworkdayjobs.com/wday/cxs/vanguard/vanguard_external/jobs",
+        "headers": {
+          "Accept": "application/json"
+        },
+        "body": {
+          "appliedFacets": {
+            "locations": [
+              "b9f1251c6ce51052658919a6dcd898d1",
+              "b9f1251c6ce510526589ff2124bf999d",
+              "b9f1251c6ce510526589f89c5cca9995"
+            ]
+          },
+          "limit": 20,
+          "offset": 0,
+          "searchText": "Python"
+        }
+      },
+      "items": {
+        "kind": "json",
+        "list": "$.jobPostings",
+        "fields": {
+          "id": "bulletFields[0]",
+          "title": "title",
+          "externalPath": "externalPath"
+        },
+        "url_template": "https://vanguard.wd5.myworkdayjobs.com/en-US/vanguard_external{externalPath}"
+      },
+      "detail_request": {
+        "method": "GET",
+        "url": "https://vanguard.wd5.myworkdayjobs.com/wday/cxs/vanguard/vanguard_external{externalPath}",
+        "headers": {
+          "Accept": "application/json"
+        },
+        "description": "$.jobPostingInfo.jobDescription"
+      }
+    },
+    {
+      "id": "comcast",
+      "search_request": {
+        "method": "POST",
+        "url": "https://comcast.wd115.myworkdayjobs.com/wday/cxs/comcast/Comcast_Careers/jobs",
+        "headers": {
+          "Accept": "application/json"
+        },
+        "body": {
+          "appliedFacets": {
+            "locations": [
+              "38d640cf23a8018e1b28496e7f273239",
+              "38d640cf23a801a1f2ccdf6b7f270039",
+              "38d640cf23a8012968217b5d7e270214",
+              "38d640cf23a8010f4fd1947e7f27773a"
+            ]
+          },
+          "limit": 20,
+          "offset": 0,
+          "searchText": "Python"
+        }
+      },
+      "items": {
+        "kind": "json",
+        "list": "$.jobPostings",
+        "fields": {
+          "id": "bulletFields[0]",
+          "title": "title",
+          "externalPath": "externalPath"
+        },
+        "url_template": "https://comcast.wd115.myworkdayjobs.com/en-US/Comcast_Careers{externalPath}"
+      },
+      "detail_request": {
+        "method": "GET",
+        "url": "https://comcast.wd115.myworkdayjobs.com/wday/cxs/comcast/Comcast_Careers{externalPath}",
+        "headers": {
+          "Accept": "application/json"
+        },
+        "description": "$.jobPostingInfo.jobDescription"
+      }
+    },
+    {
+      "id": "comcast_remote",
+      "search_request": {
+        "method": "POST",
+        "url": "https://comcast.wd115.myworkdayjobs.com/wday/cxs/comcast/Comcast_Careers/jobs",
+        "headers": {
+          "Accept": "application/json"
+        },
+        "body": {
+          "appliedFacets": {
+            "locations": [
+              "247bad0b5244013e714617da39329502",
+              "38d640cf23a801b2c939858d7e270220",
+              "38d640cf23a80145969b66927e27f220",
+              "3496086dea9610016b083865a9fe0000",
+              "38d640cf23a8015e9f4d45587e27ff11",
+              "38d640cf23a8017c31cb14467f27cc35"
+            ]
+          },
+          "limit": 20,
+          "offset": 0,
+          "searchText": "Python"
+        }
+      },
+      "items": {
+        "kind": "json",
+        "list": "$.jobPostings",
+        "fields": {
+          "id": "bulletFields[0]",
+          "title": "title",
+          "externalPath": "externalPath"
+        },
+        "url_template": "https://comcast.wd115.myworkdayjobs.com/en-US/Comcast_Careers{externalPath}"
+      },
+      "detail_request": {
+        "method": "GET",
+        "url": "https://comcast.wd115.myworkdayjobs.com/wday/cxs/comcast/Comcast_Careers{externalPath}",
+        "headers": {
+          "Accept": "application/json"
+        },
+        "description": "$.jobPostingInfo.jobDescription"
+      }
+    },
+    {
+      "id": "cencora",
+      "search_request": {
+        "method": "POST",
+        "url": "https://careers.cencora.com/widgets",
+        "headers": {
+          "Accept": "application/json"
+        },
+        "body": {
+          "lang": "en_us",
+          "deviceType": "desktop",
+          "country": "united_states",
+          "pageName": "search-results",
+          "ddoKey": "refineSearch",
+          "from": 0,
+          "jobs": true,
+          "counts": true,
+          "size": 20,
+          "keywords": "python",
+          "global": true,
+          "all_fields": [
+            "city",
+            "state",
+            "category",
+            "type",
+            "country",
+            "remoteOnsite"
+          ],
+          "selected_fields": {
+            "city": [
+              "Conshohocken",
+              "Philadelphia",
+              "Wilmington",
+              "West Chester",
+              "King of Prussia"
+            ]
+          }
+        }
+      },
+      "items": {
+        "kind": "json",
+        "list": "$.refineSearch.data.jobs",
+        "fields": {
+          "id": "jobSeqNo",
+          "title": "title",
+          "location": "location",
+          "description": "descriptionTeaser"
+        },
+        "url_template": "https://careers.cencora.com/us/en/job/{id}"
+      },
+      "detail_request": {
+        "method": "POST",
+        "url": "https://careers.cencora.com/widgets",
+        "headers": {
+          "Accept": "application/json"
+        },
+        "body": {
+          "lang": "en_us",
+          "deviceType": "desktop",
+          "country": "united_states",
+          "pageName": "job-description",
+          "ddoKey": "jobDetail",
+          "jobSeqNo": "{id}",
+          "refNum": "CHKCENUS"
+        },
+        "description": "$.jobDetail.data.job.description"
+      },
+      "max_detail_requests": 20
+    },
+    {
+      "id": "cencora_remote",
+      "search_request": {
+        "method": "POST",
+        "url": "https://careers.cencora.com/widgets",
+        "headers": {
+          "Accept": "application/json"
+        },
+        "body": {
+          "lang": "en_us",
+          "deviceType": "desktop",
+          "country": "united_states",
+          "pageName": "search-results",
+          "ddoKey": "refineSearch",
+          "from": 0,
+          "jobs": true,
+          "counts": true,
+          "size": 20,
+          "keywords": "python",
+          "global": true,
+          "all_fields": [
+            "city",
+            "state",
+            "category",
+            "type",
+            "country",
+            "remoteOnsite"
+          ],
+          "selected_fields": {
+            "city": [
+              "Remote"
+            ]
+          }
+        }
+      },
+      "items": {
+        "kind": "json",
+        "list": "$.refineSearch.data.jobs",
+        "fields": {
+          "id": "jobSeqNo",
+          "title": "title",
+          "location": "location",
+          "description": "descriptionTeaser"
+        },
+        "keep_if": {
+          "fields": [
+            "location"
+          ],
+          "contains_any": [
+            "United States",
+            "USA"
+          ]
+        },
+        "url_template": "https://careers.cencora.com/us/en/job/{id}"
+      },
+      "detail_request": {
+        "method": "POST",
+        "url": "https://careers.cencora.com/widgets",
+        "headers": {
+          "Accept": "application/json"
+        },
+        "body": {
+          "lang": "en_us",
+          "deviceType": "desktop",
+          "country": "united_states",
+          "pageName": "job-description",
+          "ddoKey": "jobDetail",
+          "jobSeqNo": "{id}",
+          "refNum": "CHKCENUS"
+        },
+        "description": "$.jobDetail.data.job.description"
+      },
+      "max_detail_requests": 20
+    },
+    {
+      "id": "gsk",
+      "search_request": {
+        "method": "POST",
+        "url": "https://gsk.wd5.myworkdayjobs.com/wday/cxs/gsk/GSKCareers/jobs",
+        "headers": {
+          "Accept": "application/json"
+        },
+        "body": {
+          "appliedFacets": {
+            "locations": [
+              "90793f76afe70136bdc7d0ebdf14c8bb",
+              "90793f76afe701a829bfa0ebdf149bbb",
+              "9fe86f91d24f010158115f8c84400000"
+            ]
+          },
+          "limit": 20,
+          "offset": 0,
+          "searchText": "Python"
+        }
+      },
+      "items": {
+        "kind": "json",
+        "list": "$.jobPostings",
+        "fields": {
+          "id": "bulletFields[0]",
+          "title": "title",
+          "externalPath": "externalPath"
+        },
+        "url_template": "https://gsk.wd5.myworkdayjobs.com/en-US/GSKCareers{externalPath}"
+      },
+      "detail_request": {
+        "method": "GET",
+        "url": "https://gsk.wd5.myworkdayjobs.com/wday/cxs/gsk/GSKCareers{externalPath}",
+        "headers": {
+          "Accept": "application/json"
+        },
+        "description": "$.jobPostingInfo.jobDescription"
+      }
     }
   ]
 }
