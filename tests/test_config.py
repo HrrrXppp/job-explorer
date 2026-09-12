@@ -80,3 +80,14 @@ def test_operator_config_limits_remote_search_to_united_states() -> None:
     assert by_id["netflix"].search_request.query["query"] == "python"
     assert "2fcb99c455831013ea52fb338f2932d8" in by_id["nvidia"].search_request.body["appliedFacets"]["locationHierarchy1"]
     assert isinstance(by_id["stripe"].items.keep_if, list)
+    assert by_id["vanguard"].search_request.body["searchText"] == "Python"
+    assert "b9f1251c6ce51052658919a6dcd898d1" in by_id["vanguard"].search_request.body["appliedFacets"]["locations"]
+    assert by_id["comcast"].search_request.body["appliedFacets"]["locations"]
+    assert "38d640cf23a8018e1b28496e7f273239" in by_id["comcast"].search_request.body["appliedFacets"]["locations"]
+    assert "247bad0b5244013e714617da39329502" in by_id["comcast_remote"].search_request.body["appliedFacets"]["locations"]
+    assert by_id["cencora"].search_request.body["keywords"] == "python"
+    assert "Conshohocken" in by_id["cencora"].search_request.body["selected_fields"]["city"]
+    assert by_id["cencora_remote"].search_request.body["selected_fields"]["city"] == ["Remote"]
+    assert "United States" in by_id["cencora_remote"].items.keep_if.contains_any
+    assert by_id["gsk"].search_request.body["searchText"] == "Python"
+    assert "90793f76afe70136bdc7d0ebdf14c8bb" in by_id["gsk"].search_request.body["appliedFacets"]["locations"]
