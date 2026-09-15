@@ -226,3 +226,7 @@ __marimo__/
 
 # Local sentence-transformers snapshot (downloaded once, reused offline)
 .models/
+
+# Local HTML reports and state JSON (date-stamped run output)
+/reports/*
+!/reports/.gitkeep

@@ -3,9 +3,8 @@ from __future__ import annotations
 import argparse
 import asyncio
 import logging
-import os
 import sys
-from collections.abc import Callable, Mapping, Sequence
+from collections.abc import Callable, Sequence
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -13,17 +12,19 @@ import httpx
 
 from job_explorer.config import ConfigError, load_config
 from job_explorer.crawler import SleepFn, crawl_all
-from job_explorer.gmail_client import GmailClient, GmailPort
 from job_explorer.matching import Encoder, build_encoder, load_resume_text, resume_fingerprints, score_descriptions
 from job_explorer.models import AppConfig, CachedPosition, CrawledItem, ScoredPosition
-from job_explorer.report import build_message, snippet
-from job_explorer.state import cached_by_id, skip_detail_ids, split_new_previous
+from job_explorer.report import render_html, snippet
+from job_explorer.report_files import load_previous_state, resolve_reports_dir, write_report
+from job_explorer.state import cached_by_id, encode_state, skip_detail_ids, split_new_previous
 
 logger = logging.getLogger(__name__)
 
 
 def main(argv: Sequence[str] | None = None) -> int:
-    parser = argparse.ArgumentParser(description="Crawl job sources, match resumes, email a Gmail report.")
+    parser = argparse.ArgumentParser(
+        description="Crawl job sources, match resumes, and write HTML and JSON reports."
+    )
     parser.add_argument("--config", default="config.json", help="Path to config.json (default: ./config.json)")
     parser.add_argument("-v", "--verbose", action="store_true")
     args = parser.parse_args(argv)
@@ -43,17 +44,15 @@ def main(argv: Sequence[str] | None = None) -> int:
 async def run_explorer(
     config: AppConfig,
     *,
-    env: Mapping[str, str] | None = None,
     client: httpx.AsyncClient | None = None,
-    gmail: GmailPort | None = None,
     encoder: Encoder | None = None,
     now: Callable[[], datetime] | None = None,
     sleep: SleepFn | None = None,
+    reports_dir: Path | None = None,
 ) -> tuple[list[ScoredPosition], list[ScoredPosition]]:
-    environ = env if env is not None else os.environ
     clock = now or (lambda: datetime.now(timezone.utc))
-    gmail_client = gmail or GmailClient.from_env(environ)
-    previous = gmail_client.fetch_previous_state()
+    out_dir = reports_dir or resolve_reports_dir(config.config_dir, config.reports_dir)
+    previous = load_previous_state(out_dir)
     fingerprints = resume_fingerprints(config.resumes)
     skip_ids = skip_detail_ids(previous, fingerprints)
     owns_client = client is None
@@ -82,20 +81,11 @@ async def run_explorer(
     scored = score_crawled(crawled, resume_texts, matcher, cache)
     new_rows, previous_rows = split_new_previous(scored, previous.position_ids)
 
-    sender = environ.get("GMAIL_USER") or ""
-    recipients = config.email.to or ([sender] if sender else [])
-    if not sender or not recipients:
-        raise RuntimeError("GMAIL_USER is required to send mail (and email.to if you want other recipients)")
-    message = build_message(
-        sender=sender,
-        to=recipients,
-        new_rows=new_rows,
-        previous_rows=previous_rows,
-        fingerprints=fingerprints,
-        when=clock(),
-    )
-    gmail_client.send_raw(bytes(message))
-    logger.info("sent report: %s", message["Subject"])
+    when = clock()
+    html_body = render_html(new_rows, previous_rows)
+    state_json = encode_state(fingerprints, new_rows + previous_rows)
+    html_path, json_path = write_report(out_dir, html=html_body, state_json=state_json, when=when)
+    logger.info("wrote report %s and %s", html_path, json_path)
     return new_rows, previous_rows
 
 
