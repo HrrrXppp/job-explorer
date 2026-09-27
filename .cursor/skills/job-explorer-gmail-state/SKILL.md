@@ -1,49 +1,33 @@
 ---
 name: job-explorer-gmail-state
 description: >-
-  Gmail API send/receive for job-explorer: OAuth refresh-token env vars,
-  HTML report (new vs previous, sorted by match percent), and stateless
-  previous-position state stored in the last three emails. Use when changing email
-  format, Gmail client, MIME state, or related pytest.
+  HTML report (new vs previous, sorted by match percent) and previous-position
+  state stored as dated JSON files in reports_dir. Use when changing report
+  format, local report files, MIME helpers, or related pytest.
 ---
 
-# Gmail report and email state
+# Report files and previous-position state
 
-The process stores **no local run history**. Previous positions, scores, and
-resume fingerprints are read from the **last three job-explorer emails** in the
-same mailbox (newest first).
+Each run writes HTML and JSON under `config.json` `reports_dir` (default
+`reports/` next to the config). Filenames use UTC date and time:
 
-## Auth (env only)
+`job-explorer-YYYY-MM-DDTHHMMSSZ.html`
+`job-explorer-YYYY-MM-DDTHHMMSSZ.json`
 
-| Variable | Meaning |
-|----------|---------|
-| `GMAIL_CLIENT_ID` | OAuth client id |
-| `GMAIL_CLIENT_SECRET` | OAuth client secret |
-| `GMAIL_REFRESH_TOKEN` | User refresh token |
-| `GMAIL_USER` | Mailbox address |
-
-Scopes: `https://www.googleapis.com/auth/gmail.send` and
-`https://www.googleapis.com/auth/gmail.readonly`.
-
-Use `google-auth` + `google-api-python-client`. Refresh access tokens in
-memory; do not write token files into the repo. Do not add an interactive
-OAuth helper that prints the refresh token.
-
-`config.json` may set `email.to` (list). Default to `GMAIL_USER`.
+Previous positions, scores, and resume fingerprints are read from the **last
+three JSON files** in that folder (newest first). A seed file named
+`job-explorer-state.json` (the old Gmail attachment name) is included. The CLI
+does not send Gmail.
 
 ## Fetch previous state
 
-1. `users.messages.list` with
-   `q='subject:"[job-explorer]" filename:job-explorer-state.json'`
-   `maxResults=3`, `userId=me`.
-2. If zero messages: previous set is empty (all positions are **new**).
-3. For each listed message, `users.messages.get` `format=full`; find MIME part
-   `filename=job-explorer-state.json` (or `Content-Disposition` filename).
-   If `body.data` is missing, download with `messages.attachments.get`
-   using `body.attachmentId` (Gmail omits inline data for larger parts).
-   Base64url-decode JSON (**version 2**). Skip a message that is corrupt or
-   missing the attachment (log a warning; treat that message as empty).
-4. Merge newest-first: fingerprints from the newest email that has them;
+1. List `*.json` in `reports_dir`. Sort newest first (UTC stamp in the filename
+   when present, otherwise file mtime).
+2. Take at most three files. If zero files: previous set is empty (all
+   positions are **new**).
+3. Decode each as JSON (**version 2**). Skip a file that is corrupt (log a
+   warning; treat that file as empty).
+4. Merge newest-first: fingerprints from the newest JSON that has them;
    cached `positions` newest-wins per id; `position_ids` is the union.
 
 Decoded JSON (**version 2**):
@@ -70,30 +54,27 @@ Decoded JSON (**version 2**):
 resume `id`. Used to decide if resumes are unchanged.
 
 Ignore unknown fields. Corrupt/missing JSON → log warning, treat as empty
-previous set (still send this run's email). Legacy `version: 1` with only
+previous set (still write this run's files). Legacy `version: 1` with only
 `position_ids` is accepted: classify new vs previous, but treat resumes as
 **changed** (no skip of detail requests).
 
-## Send report
+## Write report
 
-Multipart:
+Always write both files for this run, even when there are zero positions
+(empty `positions` and current `resume_fingerprints`):
 
-1. **text/html** — human report.
-2. **application/json** attachment `job-explorer-state.json` — **this run's**
-   fingerprints plus every position still seen this run (new rows from matching;
-   previous rows reused from cache when detail was skipped).
-
-Subject: `[job-explorer] {n_new} new, {n_prev} previous · {date UTC}`
+1. **HTML** — human report (`render_html`).
+2. **JSON** — fingerprints plus every position still seen this run (new rows
+   from matching; previous rows reused from cache when detail was skipped).
 
 ### HTML sections (required)
 
-1. **New positions** — ids not in the merged last-three-email state.
+1. **New positions** — ids not in the merged last-three-JSON state.
 2. **Previous positions** — ids present in that merged state.
 
 Each section sorted by best match percent descending. Positions whose **best**
-match is **20.0% or lower** are omitted from the HTML (and from the subject
-counts) but **remain in the JSON attachment** so the next run still treats them
-as processed. Each visible row:
+match is **20.0% or lower** are omitted from the HTML but **remain in the JSON
+file** so the next run still treats them as processed. Each visible row:
 
 - match % (one decimal)
 - title (link to job url if present)
@@ -104,23 +85,13 @@ as processed. Each visible row:
 If a section is empty (including when every row was ≤ 20%), still render the
 heading and "None".
 
-Do not omit the JSON attachment even when there are zero positions (empty
-`positions` and current `resume_fingerprints`).
-
-## Libraries
-
-Build RFC 2822 with `email.message.EmailMessage`, then
-`users.messages.send` with base64url raw.
-
 ## Tests
 
 - Encode/decode state JSON (v2 fingerprints + positions; v1 `position_ids`).
 - Classification: new vs previous given a previous id set.
 - `resumes_unchanged(current, previous)` true only on exact id→hash match.
 - HTML contains both section headings and order by percent.
-- HTML omits best match ≤ 20%; the JSON attachment still lists those ids.
-- Gmail client unit tests mock `googleapiclient.discovery.build`; do not call
-  Google in CI.
-- First-run (no messages) → all new; no skip.
-- Malformed attachment → empty previous, no crash.
-- Last three emails: union of position ids; newest fingerprints and cached row win.
+- HTML omits best match ≤ 20%; the JSON file still lists those ids.
+- Dated filenames; seed `job-explorer-state.json`; last three JSON files merge
+  newest-first; malformed JSON → empty previous, no crash.
+- First-run (no JSON files) → all new; no skip.

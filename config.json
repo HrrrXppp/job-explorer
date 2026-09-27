@@ -9,6 +9,7 @@
   "matching": {
     "model": "sentence-transformers/all-MiniLM-L6-v2"
   },
+  "reports_dir": "reports",
   "email": {
     "to": [
       "hrrrxppp@gmail.com"

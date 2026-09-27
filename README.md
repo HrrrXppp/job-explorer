@@ -1,8 +1,8 @@
 # Job explorer
 
-Stateless Python CLI that crawls job sources from HTTP requests in `config.json`, scores each opening against local DOCX resumes with [sentence-transformers](https://www.sbert.net/), and emails a ranked report (new vs previously seen) through the Gmail API.
+Python CLI that crawls job sources from HTTP requests in `config.json`, scores each opening against local DOCX resumes with [sentence-transformers](https://www.sbert.net/), and writes a ranked report (new vs previously seen) as HTML and JSON files.
 
-There is no database or local seen-jobs file. The previous run’s position ids, scores, and resume fingerprints are read from the last three report emails.
+There is no database. The previous run’s position ids, scores, and resume fingerprints are read from the last three JSON reports in `reports/` (or `reports_dir` in config).
 
 See [issue #1](https://github.com/HrrrXppp/job-explorer/issues/1) and the [implementation plan](.cursor/skills/job-explorer/implementation-plan.md).
 
@@ -16,38 +16,37 @@ uv sync --extra dev --extra ml
 
 `[ml]` installs `sentence-transformers` (needed for a real run). Tests mock the encoder and only need `--extra dev`. Dependencies are locked in `uv.lock`.
 
-The repo includes a working `config.json` (JPMC careers search). Point `resumes[].path` at your DOCX files. Do not commit resumes or `.env`.
+The repo includes a working `config.json`. Point `resumes[].path` at your DOCX files. Do not commit resumes, `.env`, or files under `reports/`.
 
 ## Run
 
 ```bash
-export GMAIL_CLIENT_ID=...
-export GMAIL_CLIENT_SECRET=...
-export GMAIL_REFRESH_TOKEN=...
-export GMAIL_USER=you@gmail.com
-# plus any ${VARS} used in config.json headers
-
 uv run job-explorer --config config.json
 ```
 
-Create a Gmail OAuth desktop client and store a refresh token in `GMAIL_REFRESH_TOKEN` (scopes `gmail.send` and `gmail.readonly`). The CLI only refreshes that token; it does not run an interactive OAuth helper.
+Each run writes a pair of files named with the UTC date and time, for example:
+
+- `reports/job-explorer-2026-09-15T013600Z.html`
+- `reports/job-explorer-2026-09-15T013600Z.json`
+
+To seed previous positions (for example the last Gmail `job-explorer-state.json` attachment), copy that file into `reports/` before the first run. A file named `job-explorer-state.json` is read the same way as a dated JSON report.
 
 ## How a run works
 
-1. Load `config.json` (search sources and resume paths) and secrets from the environment.
-2. Fetch the last Gmail report attachment (`job-explorer-state.json`).
-3. Hash each resume file (SHA-256) and compare to fingerprints in that email.
+1. Load `config.json` (search sources and resume paths) and any `${VARS}` from the environment.
+2. Read the last three JSON reports in `reports_dir` (newest first) and merge them.
+3. Hash each resume file (SHA-256) and compare to fingerprints in that state.
 4. Execute each source’s **search** request and extract job items with per-source rules.
 5. Issue **detail** requests only when needed: new jobs, or resumes that changed. Old jobs with unchanged resumes reuse cached scores (no detail HTTP).
 6. Score fetched descriptions against resumes (cosine similarity as a percent).
-7. Send one Gmail message: **New positions** then **Previous positions**, each sorted by match percent descending. Matches at **20% or below** are omitted from the HTML (and subject counts) but stay in the JSON state attachment so they remain processed.
+7. Write one HTML report and one JSON state file: **New positions** then **Previous positions**, each sorted by match percent descending. Matches at **20% or below** are omitted from the HTML (and visible counts) but stay in the JSON so they remain processed.
 
 ## Configuration
 
 | Location | Contents |
 |----------|----------|
-| `config.json` | `user_agent`, resume paths, source HTTP requests, extract/detail rules, optional model name and `email.to` |
-| Environment | Gmail OAuth (`GMAIL_CLIENT_ID`, `GMAIL_CLIENT_SECRET`, `GMAIL_REFRESH_TOKEN`, `GMAIL_USER`) and any `${VARS}` used in request headers |
+| `config.json` | `user_agent`, resume paths, source HTTP requests, extract/detail rules, optional model name, `reports_dir` |
+| Environment | Any `${VARS}` used in request headers |
 
 ### User-Agent (all requests)
 
@@ -70,7 +69,7 @@ uv sync --extra dev
 uv run pytest
 ```
 
-Default CI mocks HTTP and Gmail (no live job sites or mailbox).
+Default CI mocks HTTP (no live job sites).
 
 ## License
 

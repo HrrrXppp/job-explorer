@@ -167,8 +167,17 @@ class AppConfig(FrozenModel):
     sources: list[Source] = Field(min_length=1)
     matching: MatchingSpec = Field(default_factory=MatchingSpec)
     email: EmailSpec = Field(default_factory=EmailSpec)
+    reports_dir: str = "reports"
     user_agent: str = DEFAULT_USER_AGENT
     config_dir: str = "."
+
+    @field_validator("reports_dir")
+    @classmethod
+    def strip_reports_dir(cls, value: str) -> str:
+        stripped = value.strip()
+        if not stripped:
+            raise ValueError("reports_dir must be a non-empty string")
+        return stripped
 
     @field_validator("user_agent")
     @classmethod

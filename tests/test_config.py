@@ -22,6 +22,7 @@ def test_example_config_loads_with_env() -> None:
     assert config.resumes[0].path.endswith(raw["resumes"][0]["path"])
     assert config.matching.model == raw["matching"]["model"]
     assert config.email.to == raw["email"]["to"]
+    assert config.reports_dir == raw.get("reports_dir", "reports")
     assert source.id == raw["sources"][0]["id"]
     assert source.search_request.method == search["method"]
     assert source.search_request.url == search["url"]
@@ -69,6 +70,7 @@ def test_operator_config_limits_remote_search_to_united_states() -> None:
     raw = json.loads(OPERATOR.read_text(encoding="utf-8"))
     config = parse_config(raw, config_dir=".")
     by_id = {source.id: source for source in config.sources}
+    assert config.reports_dir == "reports"
     assert "worldwide" not in by_id["himalayas"].search_request.query
     assert by_id["himalayas"].search_request.query["country"] == "US"
     assert by_id["jobicy"].search_request.query["geo"] == "usa"
