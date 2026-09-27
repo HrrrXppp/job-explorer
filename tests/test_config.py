@@ -151,3 +151,13 @@ def test_operator_config_limits_remote_search_to_united_states() -> None:
     ]
     assert "pnc_remote" not in by_id
     assert "td_remote" not in by_id
+    assert by_id["samsara_remote"].search_request.url == (
+        "https://boards-api.greenhouse.io/v1/boards/samsara/jobs"
+    )
+    assert by_id["samsara_remote"].search_request.query["content"] == "true"
+    assert isinstance(by_id["samsara_remote"].items.keep_if, list)
+    assert "python" in by_id["samsara_remote"].items.keep_if[0].contains_any
+    assert "Remote - US" in by_id["samsara_remote"].items.keep_if[1].contains_any
+    assert "Remote - PA" in by_id["samsara_remote"].items.keep_if[1].contains_any
+    assert "Remote - Canada" not in by_id["samsara_remote"].items.keep_if[1].contains_any
+    assert "samsara" not in by_id

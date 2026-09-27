@@ -2376,6 +2376,71 @@
         },
         "description": "$.jobPostingInfo.jobDescription"
       }
+    },
+    {
+      "id": "samsara_remote",
+      "search_request": {
+        "method": "GET",
+        "url": "https://boards-api.greenhouse.io/v1/boards/samsara/jobs",
+        "headers": {
+          "Accept": "application/json"
+        },
+        "query": {
+          "content": "true"
+        }
+      },
+      "items": {
+        "kind": "json",
+        "list": "$.jobs",
+        "fields": {
+          "id": "id",
+          "title": "title",
+          "url": "absolute_url",
+          "description": "content",
+          "location": "location.name"
+        },
+        "keep_if": [
+          {
+            "fields": [
+              "title",
+              "description"
+            ],
+            "contains_any": [
+              "python"
+            ]
+          },
+          {
+            "fields": [
+              "location"
+            ],
+            "contains_any": [
+              "Remote - US",
+              "Remote - PA",
+              "Remote - NY",
+              "Remote - CT",
+              "Remote - DC",
+              "Remote - MD",
+              "Remote - NJ",
+              "Remote - DE",
+              "Remote - Seattle",
+              "Remote - Dallas",
+              "Remote - TX",
+              "Remote - SF Bay Area",
+              "Remote - Chicago",
+              "Remote - AZ",
+              "Remote - MA",
+              "Remote - MI",
+              "Remote - OR",
+              "Remote - UT",
+              "Remote - Houston",
+              "Remote - OK",
+              "Remote - FL",
+              "Remote - GA",
+              "Remote - LA"
+            ]
+          }
+        ]
+      }
     }
   ]
 }
