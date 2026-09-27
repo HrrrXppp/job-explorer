@@ -151,3 +151,41 @@ def test_operator_config_limits_remote_search_to_united_states() -> None:
     ]
     assert "pnc_remote" not in by_id
     assert "td_remote" not in by_id
+    assert by_id["samsara_remote"].search_request.url == (
+        "https://boards-api.greenhouse.io/v1/boards/samsara/jobs"
+    )
+    assert by_id["samsara_remote"].search_request.query["content"] == "true"
+    assert isinstance(by_id["samsara_remote"].items.keep_if, list)
+    assert "python" in by_id["samsara_remote"].items.keep_if[0].contains_any
+    assert "Remote - US" in by_id["samsara_remote"].items.keep_if[1].contains_any
+    assert "Remote - PA" in by_id["samsara_remote"].items.keep_if[1].contains_any
+    assert "Remote - Canada" not in by_id["samsara_remote"].items.keep_if[1].contains_any
+    assert "samsara" not in by_id
+    assert by_id["pwc"].search_request.body["searchText"] == "Python"
+    assert "e57e6863118d0164aff63580342bb3bd" in by_id["pwc"].search_request.body["appliedFacets"]["locations"]
+    assert "9f1721f94147019a708758d4ab071799" in by_id["pwc_remote"].search_request.body["appliedFacets"]["locations"]
+    assert "CX_2001" in by_id["chubb"].search_request.query["finder"]
+    assert "latitude=39.7876" in by_id["chubb"].search_request.query["finder"]
+    assert "radius=50" in by_id["chubb"].search_request.query["finder"]
+    assert by_id["cigna"].search_request.body["keywords"] == "python"
+    assert by_id["cigna"].search_request.body["refNum"] == "CIGNUS"
+    assert by_id["cigna"].search_request.body["selected_fields"]["city"] == ["Philadelphia"]
+    assert by_id["cigna_remote"].search_request.body["selected_fields"]["city"] == ["Remote"]
+    assert "United States" in by_id["cigna_remote"].items.keep_if.contains_any
+    assert "89aa261a3abf01b693565127672ca168" in by_id["travelers"].search_request.body["appliedFacets"]["locations"]
+    assert "ada8d448ea9f01a94f1ce6700c6b7c4a" in by_id["aig"].search_request.body["appliedFacets"]["locations"]
+    assert "bf1cc5a85e0b100275767c808c750000" in by_id["allstate_remote"].search_request.body["appliedFacets"]["locations"]
+    assert "chubb_remote" not in by_id
+    assert "travelers_remote" not in by_id
+    assert "aig_remote" not in by_id
+    assert "allstate" not in by_id
+    assert by_id["ford_remote"].search_request.url == "https://www.careers.ford.com/search-jobs/resultspost"
+    assert by_id["ford_remote"].search_request.body["Keywords"] == "python"
+    assert by_id["ford_remote"].search_request.body["FacetFilters"][0]["Display"] == "Remote"
+    assert by_id["ford_remote"].search_request.body["FacetFilters"][0]["ID"] == "1000000000100"
+    assert by_id["gm_remote"].search_request.body["searchText"] == "Python"
+    assert "e30192a1b9ad01f018f447afb61fec4c" in by_id["gm_remote"].search_request.body["appliedFacets"]["locations"]
+    assert "ford" not in by_id
+    assert "gm" not in by_id
+    assert "caterpillar" not in by_id
+    assert "caterpillar_remote" not in by_id
