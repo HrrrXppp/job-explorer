@@ -121,14 +121,18 @@ request itself if the source API supports it.
 - Retries: `@retry_http` only retries; `send_request` raises on 429/5xx so the
   decorator can back off (3 attempts, exponential). Disconnects and other
   transport errors are not retried.
-- One failed search or detail request (`RequestFailed`) stops the run. Sources
-  and detail fetches run sequentially so remaining HTTP is not started.
+- One failed search or detail request (`RequestFailed`) is logged and skipped.
+  Remaining sources and detail fetches still run. A failed search yields no
+  items for that source; a failed detail keeps the search hit with an empty
+  description.
 - **Skip detail HTTP** for ids in `skip_detail_ids` (old items + unchanged
   resumes). Crawler still returns those items from search (id, title, url)
   without a description; CLI fills scores from email cache.
 - Tests: fixture bodies + `respx`; assert exact detail URLs and extracted
   description text. Assert no detail call when id is in `skip_detail_ids`.
-  No live fetches. Assert a failed request stops later sources and details.
+  No live fetches. Assert a failed search skips that source and still crawls
+  later sources; a failed detail skips that description and still fetches later
+  details.
 
 ## Config interpolation
 

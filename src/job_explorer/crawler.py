@@ -24,7 +24,7 @@ SleepFn = Callable[[float], Awaitable[None]]
 
 
 class RequestFailed(RuntimeError):
-    """A search or detail HTTP request failed; the run should stop."""
+    """A search or detail HTTP request failed after retries."""
 
 
 class RetryableError(Exception):
@@ -117,7 +117,11 @@ async def crawl_source(
     sleep: SleepFn = asyncio.sleep,
 ) -> list[CrawledItem]:
     skip = skip_detail_ids or set()
-    found_items = await _found_items(client, source, sleep=sleep)
+    try:
+        found_items = await _found_items(client, source, sleep=sleep)
+    except RequestFailed as exc:
+        logger.error("%s", exc)
+        return []
     seen: set[str] = set()
     crawled: list[CrawledItem | None] = []
     pending: list[tuple[int, dict[str, str]]] = []
@@ -172,7 +176,11 @@ async def crawl_source(
         detail_count += 1
     if pending:
         for index, item in pending:
-            description = await _fetch_description(client, source, item, sleep=sleep)
+            try:
+                description = await _fetch_description(client, source, item, sleep=sleep)
+            except RequestFailed as exc:
+                logger.error("%s", exc)
+                description = ""
             crawled[index] = CrawledItem(
                 id=f"{source.id}:{item['id']}",
                 source_id=source.id,

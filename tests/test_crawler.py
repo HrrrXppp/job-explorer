@@ -136,11 +136,15 @@ async def test_disconnect_is_request_failed() -> None:
 
 
 @respx.mock
-async def test_one_failed_request_stops_remaining_sources() -> None:
+async def test_one_failed_request_skips_source_and_continues() -> None:
     first = respx.get("https://a.example/search").mock(return_value=httpx.Response(503, text="down"))
     second = respx.get("https://b.example/search").mock(
-        return_value=httpx.Response(200, json={"results": []})
+        return_value=httpx.Response(
+            200,
+            json={"results": [{"id": "ok", "title": "Kept", "html_url": "https://b.example/ok"}]},
+        )
     )
+    respx.get("https://example.com/jobs/ok").mock(return_value=httpx.Response(200, json=DETAIL_JSON))
     sources = [
         _source(
             id="first",
@@ -152,14 +156,15 @@ async def test_one_failed_request_stops_remaining_sources() -> None:
         ),
     ]
     async with httpx.AsyncClient() as client:
-        with pytest.raises(RequestFailed, match="GET https://a.example/search failed"):
-            await crawl_all(client, sources, sleep=nosleep)
+        items = await crawl_all(client, sources, sleep=nosleep)
     assert first.call_count == 3
-    assert second.call_count == 0
+    assert second.call_count == 1
+    assert [item.id for item in items] == ["second:ok"]
+    assert items[0].description == "Need Python"
 
 
 @respx.mock
-async def test_one_failed_detail_stops_remaining_details() -> None:
+async def test_one_failed_detail_continues_remaining_details() -> None:
     respx.get("https://example.com/search").mock(
         return_value=httpx.Response(
             200,
@@ -178,10 +183,13 @@ async def test_one_failed_detail_stops_remaining_details() -> None:
         return_value=httpx.Response(200, json=DETAIL_JSON)
     )
     async with httpx.AsyncClient() as client:
-        with pytest.raises(RequestFailed, match="GET https://example.com/jobs/1 failed"):
-            await crawl_source(client, _source(), sleep=nosleep)
+        items = await crawl_source(client, _source(), sleep=nosleep)
     assert first.call_count == 1
-    assert second.call_count == 0
+    assert second.call_count == 1
+    assert items[0].id == "example:1"
+    assert items[0].description == ""
+    assert items[1].id == "example:2"
+    assert items[1].description == "Need Python"
 
 
 @respx.mock
