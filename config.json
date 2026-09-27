@@ -2814,6 +2814,89 @@
         },
         "description": "$.jobPostingInfo.jobDescription"
       }
+    },
+    {
+      "id": "ford_remote",
+      "search_request": {
+        "method": "POST",
+        "url": "https://www.careers.ford.com/search-jobs/resultspost",
+        "headers": {
+          "Accept": "application/json"
+        },
+        "body": {
+          "Keywords": "python",
+          "RecordsPerPage": 20,
+          "CurrentPage": 1,
+          "SearchType": 5,
+          "SearchResultsModuleName": "Section 6 - Search Results List",
+          "SearchFiltersModuleName": "Search Filters",
+          "FacetFilters": [
+            {
+              "ID": "1000000000100",
+              "FacetType": 2,
+              "Display": "Remote",
+              "IsApplied": true,
+              "FieldName": ""
+            }
+          ]
+        }
+      },
+      "items": {
+        "kind": "html",
+        "list": "li.search-results-list__item",
+        "fields": {
+          "id": "a.search-results-list__job-link@data-job-id",
+          "title": "a.search-results-list__job-link",
+          "url": "a.search-results-list__job-link@href"
+        }
+      },
+      "detail_request": {
+        "method": "GET",
+        "url": "{url}",
+        "headers": {
+          "Accept": "text/html"
+        },
+        "description": ".ats-description"
+      },
+      "max_detail_requests": 20
+    },
+    {
+      "id": "gm_remote",
+      "search_request": {
+        "method": "POST",
+        "url": "https://generalmotors.wd5.myworkdayjobs.com/wday/cxs/generalmotors/Careers_GM/jobs",
+        "headers": {
+          "Accept": "application/json"
+        },
+        "body": {
+          "appliedFacets": {
+            "locations": [
+              "e30192a1b9ad01f018f447afb61fec4c"
+            ]
+          },
+          "limit": 20,
+          "offset": 0,
+          "searchText": "Python"
+        }
+      },
+      "items": {
+        "kind": "json",
+        "list": "$.jobPostings",
+        "fields": {
+          "id": "bulletFields[0]",
+          "title": "title",
+          "externalPath": "externalPath"
+        },
+        "url_template": "https://generalmotors.wd5.myworkdayjobs.com/en-US/Careers_GM{externalPath}"
+      },
+      "detail_request": {
+        "method": "GET",
+        "url": "https://generalmotors.wd5.myworkdayjobs.com/wday/cxs/generalmotors/Careers_GM{externalPath}",
+        "headers": {
+          "Accept": "application/json"
+        },
+        "description": "$.jobPostingInfo.jobDescription"
+      }
     }
   ]
 }

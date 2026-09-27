@@ -179,3 +179,13 @@ def test_operator_config_limits_remote_search_to_united_states() -> None:
     assert "travelers_remote" not in by_id
     assert "aig_remote" not in by_id
     assert "allstate" not in by_id
+    assert by_id["ford_remote"].search_request.url == "https://www.careers.ford.com/search-jobs/resultspost"
+    assert by_id["ford_remote"].search_request.body["Keywords"] == "python"
+    assert by_id["ford_remote"].search_request.body["FacetFilters"][0]["Display"] == "Remote"
+    assert by_id["ford_remote"].search_request.body["FacetFilters"][0]["ID"] == "1000000000100"
+    assert by_id["gm_remote"].search_request.body["searchText"] == "Python"
+    assert "e30192a1b9ad01f018f447afb61fec4c" in by_id["gm_remote"].search_request.body["appliedFacets"]["locations"]
+    assert "ford" not in by_id
+    assert "gm" not in by_id
+    assert "caterpillar" not in by_id
+    assert "caterpillar_remote" not in by_id
