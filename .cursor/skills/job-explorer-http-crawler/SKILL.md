@@ -117,7 +117,10 @@ request itself if the source API supports it.
 ## Execution rules
 
 - Cap detail requests per source (`max_detail_requests`, default 100).
-- Deduplicate by position id before matching.
+- Deduplicate by position id before matching. The report keeps one row per job
+  URL when overlapping searches (for example local and remote) return the same
+  posting. A blank URL is not merged. The kept row is the higher match, and if
+  any copy was seen before, that previous id is kept so it stays in Previous.
 - Retries: `@retry_http` only retries; `send_request` raises on 429/5xx so the
   decorator can back off (3 attempts, exponential). Disconnects and other
   transport errors are not retried.

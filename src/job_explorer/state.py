@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 import logging
 from collections.abc import Mapping, Sequence
+from urllib.parse import urlsplit, urlunsplit
 
 from pydantic import ValidationError
 
@@ -91,6 +92,48 @@ def skip_detail_ids(previous: PreviousState, fingerprints: Mapping[str, str]) ->
 
 def cached_by_id(previous: PreviousState) -> dict[str, CachedPosition]:
     return {row.id: row for row in previous.positions}
+
+
+def canonical_job_url(url: str) -> str:
+    """Identity for the same posting across overlapping searches."""
+    stripped = url.strip()
+    if not stripped:
+        return ""
+    parts = urlsplit(stripped)
+    if not parts.scheme or not parts.netloc:
+        return stripped
+    return urlunsplit((parts.scheme.lower(), parts.netloc.lower(), parts.path.rstrip("/"), parts.query, ""))
+
+
+def dedupe_scored_by_url(
+    rows: list[ScoredPosition],
+    previous_ids: set[str],
+) -> list[ScoredPosition]:
+    """Keep one row per job URL. Prefer the higher match, and a previously seen id."""
+    index_by_url: dict[str, int] = {}
+    ids_by_url: dict[str, list[str]] = {}
+    result: list[ScoredPosition] = []
+    for row in rows:
+        key = canonical_job_url(row.url)
+        if not key:
+            result.append(row)
+            continue
+        ids_by_url.setdefault(key, []).append(row.id)
+        existing = index_by_url.get(key)
+        if existing is None:
+            index_by_url[key] = len(result)
+            result.append(row)
+            continue
+        if row.best_percent > result[existing].best_percent:
+            result[existing] = row
+    for key, index in index_by_url.items():
+        row = result[index]
+        if row.id in previous_ids:
+            continue
+        known = next((pid for pid in ids_by_url[key] if pid in previous_ids), None)
+        if known is not None:
+            result[index] = row.model_copy(update={"id": known})
+    return result
 
 
 def split_new_previous(
