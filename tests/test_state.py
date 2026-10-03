@@ -3,6 +3,7 @@ from __future__ import annotations
 from job_explorer.models import CachedPosition, PreviousState, ScoredPosition
 from job_explorer.state import (
     decode_state,
+    dedupe_scored_by_url,
     encode_state,
     merge_previous_states,
     resumes_unchanged,
@@ -63,6 +64,60 @@ def test_skip_when_resumes_and_cache_match() -> None:
     )
     assert skip_detail_ids(previous, {"primary": "sha256:aa"}) == {"example:1"}
     assert skip_detail_ids(previous, {"primary": "sha256:zz"}) == set()
+
+
+def test_dedupe_same_url_from_overlapping_searches() -> None:
+    local = ScoredPosition(
+        id="dice:97dd345f",
+        title="Lead Python developer",
+        url="https://www.dice.com/job-detail/97dd345f-b575-421f-8e1a-802a89db2201",
+        source_id="dice",
+        scores={"primary": 20.2},
+    )
+    remote = local.model_copy(
+        update={
+            "id": "dice_remote:97dd345f",
+            "source_id": "dice_remote",
+            "url": "https://www.Dice.com/job-detail/97dd345f-b575-421f-8e1a-802a89db2201/",
+            "scores": {"primary": 55.0},
+        }
+    )
+    other = ScoredPosition(
+        id="chase:1",
+        title="Other",
+        url="https://example.com/jobs/1",
+        source_id="chase",
+        scores={"primary": 40.0},
+    )
+    blank_a = ScoredPosition(
+        id="a:1",
+        title="A",
+        url="",
+        source_id="a",
+        scores={"primary": 10.0},
+    )
+    blank_b = blank_a.model_copy(update={"id": "b:1", "source_id": "b"})
+    rows = dedupe_scored_by_url([local, remote, other, blank_a, blank_b], set())
+    assert [row.id for row in rows] == ["dice_remote:97dd345f", "chase:1", "a:1", "b:1"]
+    assert rows[0].best_percent == 55.0
+
+
+def test_dedupe_keeps_previous_id_when_urls_match() -> None:
+    local = ScoredPosition(
+        id="dice:97dd345f",
+        title="Lead Python developer",
+        url="https://www.dice.com/job-detail/97dd345f",
+        source_id="dice",
+        scores={"primary": 20.2},
+    )
+    remote = local.model_copy(
+        update={"id": "dice_remote:97dd345f", "source_id": "dice_remote", "scores": {"primary": 20.2}}
+    )
+    rows = dedupe_scored_by_url([remote, local], {"dice:97dd345f"})
+    assert [row.id for row in rows] == ["dice:97dd345f"]
+    new_rows, prev_rows = split_new_previous(rows, {"dice:97dd345f"})
+    assert new_rows == []
+    assert [row.id for row in prev_rows] == ["dice:97dd345f"]
 
 
 def test_split_new_previous_order() -> None:
