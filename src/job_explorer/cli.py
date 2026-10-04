@@ -16,7 +16,13 @@ from job_explorer.matching import Encoder, build_encoder, load_resume_text, resu
 from job_explorer.models import AppConfig, CachedPosition, CrawledItem, ScoredPosition
 from job_explorer.report import render_html, snippet
 from job_explorer.report_files import load_previous_state, resolve_reports_dir, write_report
-from job_explorer.state import cached_by_id, encode_state, skip_detail_ids, split_new_previous
+from job_explorer.state import (
+    cached_by_id,
+    dedupe_scored_by_url,
+    encode_state,
+    skip_detail_ids,
+    split_new_previous,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -78,7 +84,10 @@ async def run_explorer(
         cache_dir = Path(config.config_dir) / cache_dir
     matcher = encoder or build_encoder(config.matching.model, cache_dir=cache_dir)
     cache = cached_by_id(previous)
-    scored = score_crawled(crawled, resume_texts, matcher, cache)
+    scored = dedupe_scored_by_url(
+        score_crawled(crawled, resume_texts, matcher, cache),
+        previous.position_ids,
+    )
     new_rows, previous_rows = split_new_previous(scored, previous.position_ids)
 
     when = clock()
