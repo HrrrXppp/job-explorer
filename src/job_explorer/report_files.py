@@ -10,7 +10,7 @@ from job_explorer.state import decode_state, merge_previous_states
 
 logger = logging.getLogger(__name__)
 
-PREVIOUS_JSON_LIMIT = 3
+PREVIOUS_JSON_LIMIT = 7
 STAMP_FORMAT = "%Y-%m-%dT%H%M%SZ"
 _STAMP_RE = re.compile(r"(\d{4}-\d{2}-\d{2}T\d{6}Z)")
 

@@ -21,7 +21,7 @@ GMAIL_SCOPES = [
     "https://www.googleapis.com/auth/gmail.readonly",
 ]
 SEARCH_QUERY = 'subject:"[job-explorer]" filename:job-explorer-state.json'
-PREVIOUS_EMAIL_LIMIT = 3
+PREVIOUS_EMAIL_LIMIT = 7
 FILENAME_RE = re.compile(r'filename\*?=(?:UTF-8\'\')?"?([^";\r\n]+)"?', re.I)
 
 

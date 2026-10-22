@@ -2,7 +2,7 @@
 
 Python CLI that crawls job sources from HTTP requests in `config.json`, scores each opening against local DOCX resumes with [sentence-transformers](https://www.sbert.net/), and writes a ranked report (new vs previously seen) as HTML and JSON files.
 
-There is no database. The previous run’s position ids, scores, and resume fingerprints are read from the last three JSON reports in `reports/` (or `reports_dir` in config).
+There is no database. The previous run’s position ids, scores, and resume fingerprints are read from the last seven JSON reports in `reports/` (or `reports_dir` in config).
 
 See [issue #1](https://github.com/HrrrXppp/job-explorer/issues/1) and the [implementation plan](.cursor/skills/job-explorer/implementation-plan.md).
 
@@ -34,7 +34,7 @@ To seed previous positions (for example the last Gmail `job-explorer-state.json`
 ## How a run works
 
 1. Load `config.json` (search sources and resume paths) and any `${VARS}` from the environment.
-2. Read the last three JSON reports in `reports_dir` (newest first) and merge them.
+2. Read the last seven JSON reports in `reports_dir` (newest first) and merge them. A job URL that shows up in more than one source is kept once. One failed search or detail request is logged and skipped; the rest of the run continues.
 3. Hash each resume file (SHA-256) and compare to fingerprints in that state.
 4. Execute each source’s **search** request and extract job items with per-source rules.
 5. Issue **detail** requests only when needed: new jobs, or resumes that changed. Old jobs with unchanged resumes reuse cached scores (no detail HTTP).
