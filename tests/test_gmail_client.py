@@ -95,10 +95,10 @@ def test_fetches_json_attachment() -> None:
     assert "example:1" in state.position_ids
     assert state.resume_fingerprints["primary"] == "sha256:z"
     assert messages.list_kwargs is not None
-    assert messages.list_kwargs["maxResults"] == 3
+    assert messages.list_kwargs["maxResults"] == 7
 
 
-def test_merges_positions_from_last_three_emails() -> None:
+def test_merges_positions_from_recent_emails() -> None:
     newest = json.loads(encode_state({"primary": "sha256:new"}, []))
     newest["positions"] = [
         {"id": "example:1", "title": "New", "url": "u", "source_id": "example", "scores": {"primary": 9.0}}

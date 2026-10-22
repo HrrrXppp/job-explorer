@@ -5,7 +5,7 @@ description: >-
   crawl job sources from config.json HTTP request lists, match DOCX resumes
   with a local sentence-transformers model, write a ranked new/previous HTML
   and JSON report into a local folder, and read previous positions from the
-  last three JSON reports. Use when working on this repo, config.json, pytest,
+  last seven JSON reports. Use when working on this repo, config.json, pytest,
   the CLI pipeline, or issue #1.
 ---
 
@@ -14,7 +14,7 @@ description: >-
 Issue: https://github.com/HrrrXppp/job-explorer/issues/1
 
 This repo is a Python CLI. Previous positions, scores, and resume fingerprints
-come from the last three JSON reports in `reports_dir` (default `reports/` next
+come from the last seven JSON reports in `reports_dir` (default `reports/` next
 to `config.json`; newest fingerprints and cached rows win; position ids are
 the union). Each run writes HTML and JSON files named with the UTC stamp
 `job-explorer-YYYY-MM-DDTHHMMSSZ.{html,json}`. A seed file named
@@ -44,7 +44,7 @@ the union). Each run writes HTML and JSON files named with the UTC stamp
 
 ```
 load config + env
-  -> read last three JSON reports in reports_dir and merge (empty if none)
+  -> read last seven JSON reports in reports_dir and merge (empty if none)
   -> hash each resume file (SHA-256); compare to newest JSON fingerprints
   -> for each source: search HTTP -> parse items
   -> detail HTTP only when required (see skip rule) -> match those
@@ -56,7 +56,7 @@ load config + env
 
 Do **not** issue a detail request for a position when **both** are true:
 
-1. **Old item:** its id is in the merged last-three-JSON position list.
+1. **Old item:** its id is in the merged last-seven-JSON position list.
 2. **Resumes unchanged:** current SHA-256 of every resume file (keyed by
    resume id) equals `resume_fingerprints` from the newest JSON that has
    them (same ids, same hashes).
@@ -123,7 +123,7 @@ Source-specific API keys may appear only as `${VAR}` placeholders inside
 - Cover skip rule: unchanged resumes + old id → zero detail HTTP; changed
   resume hash → detail HTTP for old ids; new id → detail HTTP.
 - Cover report files: UTC date-time names; seed `job-explorer-state.json`;
-  last three JSON files merge newest-first; corrupt JSON is ignored.
+  last seven JSON files merge newest-first; corrupt JSON is ignored.
 
 ## Out of scope unless asked
 

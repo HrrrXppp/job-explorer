@@ -15,7 +15,7 @@ Each run writes HTML and JSON under `config.json` `reports_dir` (default
 `job-explorer-YYYY-MM-DDTHHMMSSZ.json`
 
 Previous positions, scores, and resume fingerprints are read from the **last
-three JSON files** in that folder (newest first). A seed file named
+seven JSON files** in that folder (newest first). A seed file named
 `job-explorer-state.json` (the old Gmail attachment name) is included. The CLI
 does not send Gmail.
 
@@ -23,7 +23,7 @@ does not send Gmail.
 
 1. List `*.json` in `reports_dir`. Sort newest first (UTC stamp in the filename
    when present, otherwise file mtime).
-2. Take at most three files. If zero files: previous set is empty (all
+2. Take at most seven files. If zero files: previous set is empty (all
    positions are **new**).
 3. Decode each as JSON (**version 2**). Skip a file that is corrupt (log a
    warning; treat that file as empty).
@@ -69,7 +69,7 @@ Always write both files for this run, even when there are zero positions
 
 ### HTML sections (required)
 
-1. **New positions** — ids not in the merged last-three-JSON state.
+1. **New positions** — ids not in the merged last-seven-JSON state.
 2. **Previous positions** — ids present in that merged state.
 
 Each section sorted by best match percent descending. Positions whose **best**
@@ -92,6 +92,6 @@ heading and "None".
 - `resumes_unchanged(current, previous)` true only on exact id→hash match.
 - HTML contains both section headings and order by percent.
 - HTML omits best match ≤ 20%; the JSON file still lists those ids.
-- Dated filenames; seed `job-explorer-state.json`; last three JSON files merge
+- Dated filenames; seed `job-explorer-state.json`; last seven JSON files merge
   newest-first; malformed JSON → empty previous, no crash.
 - First-run (no JSON files) → all new; no skip.

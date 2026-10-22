@@ -40,41 +40,23 @@ def test_load_previous_state_reads_gmail_attachment_name(tmp_path: Path) -> None
     assert "example:1" in state.position_ids
 
 
-def test_load_previous_state_merges_newest_three_json_files(tmp_path: Path) -> None:
-    write_report(
-        tmp_path,
-        html="",
-        state_json=encode_state({"primary": "sha256:oldest"}, [_row("example:3", "Oldest")]),
-        when=datetime(2026, 1, 1, tzinfo=timezone.utc),
-    )
-    write_report(
-        tmp_path,
-        html="",
-        state_json=encode_state({"primary": "sha256:older"}, [_row("example:2", "Older")]),
-        when=datetime(2026, 1, 2, tzinfo=timezone.utc),
-    )
-    write_report(
-        tmp_path,
-        html="",
-        state_json=encode_state({"primary": "sha256:new"}, [_row("example:1", "New")]),
-        when=datetime(2026, 1, 3, tzinfo=timezone.utc),
-    )
-    write_report(
-        tmp_path,
-        html="",
-        state_json=encode_state({"primary": "sha256:ignored"}, [_row("example:0", "Too old")]),
-        when=datetime(2025, 12, 1, tzinfo=timezone.utc),
-    )
+def test_load_previous_state_merges_newest_seven_json_files(tmp_path: Path) -> None:
+    for day in range(1, 9):
+        write_report(
+            tmp_path,
+            html="",
+            state_json=encode_state(
+                {"primary": f"sha256:day{day}"},
+                [_row(f"example:{day}", f"Day {day}")],
+            ),
+            when=datetime(2026, 1, day, tzinfo=timezone.utc),
+        )
     state = load_previous_state(tmp_path)
-    assert state.resume_fingerprints["primary"] == "sha256:new"
-    assert state.position_ids == {"example:1", "example:2", "example:3"}
-    assert {row.id: row.title for row in state.positions} == {
-        "example:1": "New",
-        "example:2": "Older",
-        "example:3": "Oldest",
-    }
+    assert state.resume_fingerprints["primary"] == "sha256:day8"
+    assert state.position_ids == {f"example:{day}" for day in range(2, 9)}
+    assert "example:1" not in state.position_ids
     names = [path.name for path in list_state_jsons(tmp_path)]
-    assert names[0] == "job-explorer-2026-01-03T000000Z.json"
+    assert names[0] == "job-explorer-2026-01-08T000000Z.json"
 
 
 def test_corrupt_json_is_ignored(tmp_path: Path) -> None:
