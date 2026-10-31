@@ -14,6 +14,7 @@ from job_explorer.crawler import (
     extract_description,
     extract_items,
     send_request,
+    title_matches_any,
 )
 from job_explorer.models import DetailSpec, HttpRequest, ItemsSpec, Source
 from tests.conftest import nosleep
@@ -232,6 +233,52 @@ async def test_duplicate_search_id_is_warned(caplog) -> None:
         items = await crawl_source(client, _source(), sleep=nosleep)
     assert len(items) == 1
     assert "duplicate position id example:123" in caplog.text
+
+
+def test_title_matches_any_is_case_insensitive() -> None:
+    needles = ["Engineer", "Developer"]
+    assert title_matches_any("Senior Software ENGINEER", needles)
+    assert title_matches_any("backend developer", needles)
+    assert title_matches_any("Staff Engineer, Platform", needles)
+    assert not title_matches_any("Product Manager", needles)
+    assert not title_matches_any("", needles)
+    assert title_matches_any("Product Manager", [])
+
+
+@respx.mock
+async def test_title_contains_any_skips_other_titles_and_their_details() -> None:
+    respx.get("https://example.com/search").mock(
+        return_value=httpx.Response(
+            200,
+            json={
+                "results": [
+                    {"id": "1", "title": "Senior Software ENGINEER", "html_url": "/1"},
+                    {"id": "2", "title": "Product Manager", "html_url": "/2"},
+                    {"id": "3", "title": "backend developer", "html_url": "/3"},
+                ]
+            },
+        )
+    )
+    engineer = respx.get("https://example.com/jobs/1").mock(
+        return_value=httpx.Response(200, json=DETAIL_JSON)
+    )
+    manager = respx.get("https://example.com/jobs/2").mock(
+        return_value=httpx.Response(200, json=DETAIL_JSON)
+    )
+    developer = respx.get("https://example.com/jobs/3").mock(
+        return_value=httpx.Response(200, json=DETAIL_JSON)
+    )
+    async with httpx.AsyncClient() as client:
+        items = await crawl_source(
+            client,
+            _source(),
+            sleep=nosleep,
+            title_contains_any=["Engineer", "Developer"],
+        )
+    assert [item.title for item in items] == ["Senior Software ENGINEER", "backend developer"]
+    assert engineer.called
+    assert developer.called
+    assert not manager.called
 
 
 def test_json_items_and_relative_urls() -> None:

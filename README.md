@@ -36,7 +36,7 @@ To seed previous positions (for example the last Gmail `job-explorer-state.json`
 1. Load `config.json` (search sources and resume paths) and any `${VARS}` from the environment.
 2. Read the last seven JSON reports in `reports_dir` (newest first) and merge them. A job URL that shows up in more than one source is kept once. One failed search or detail request is logged and skipped; the rest of the run continues.
 3. Hash each resume file (SHA-256) and compare to fingerprints in that state.
-4. Execute each source’s **search** request and extract job items with per-source rules.
+4. Execute each source’s **search** request and extract job items with per-source rules. If `title_contains_any` is a non-empty list, keep a position only when its title contains one of those strings, in any letter case.
 5. Issue **detail** requests only when needed: new jobs, or resumes that changed. Old jobs with unchanged resumes reuse cached scores (no detail HTTP).
 6. Score fetched descriptions against resumes (cosine similarity as a percent).
 7. Write one HTML report and one JSON state file: **New positions** then **Previous positions**, each sorted by match percent descending. Matches at **20% or below** are omitted from the HTML (and visible counts) but stay in the JSON so they remain processed.
@@ -45,7 +45,7 @@ To seed previous positions (for example the last Gmail `job-explorer-state.json`
 
 | Location | Contents |
 |----------|----------|
-| `config.json` | `user_agent`, resume paths, source HTTP requests, extract/detail rules, optional model name, `reports_dir` |
+| `config.json` | `user_agent`, resume paths, source HTTP requests, extract/detail rules, optional model name, `reports_dir`, optional `title_contains_any` |
 | Environment | Any `${VARS}` used in request headers |
 
 ### User-Agent (all requests)

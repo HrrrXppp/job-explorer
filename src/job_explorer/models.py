@@ -169,6 +169,7 @@ class AppConfig(FrozenModel):
     email: EmailSpec = Field(default_factory=EmailSpec)
     reports_dir: str = "reports"
     user_agent: str = DEFAULT_USER_AGENT
+    title_contains_any: list[str] = Field(default_factory=list)
     config_dir: str = "."
 
     @field_validator("reports_dir")
@@ -186,6 +187,11 @@ class AppConfig(FrozenModel):
         if not stripped:
             raise ValueError("user_agent must be a non-empty string")
         return stripped
+
+    @field_validator("title_contains_any")
+    @classmethod
+    def strip_title_needles(cls, value: list[str]) -> list[str]:
+        return [item.strip() for item in value if item.strip()]
 
 
 class CrawledItem(LooseModel):

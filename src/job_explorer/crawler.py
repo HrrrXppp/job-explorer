@@ -109,14 +109,24 @@ def _httpx_kwargs(request: HttpRequest) -> dict[str, Any]:
     return kwargs
 
 
+def title_matches_any(title: str, needles: list[str]) -> bool:
+    """True when needles is empty, or title contains any needle regardless of case."""
+    if not needles:
+        return True
+    lowered = title.lower()
+    return any(needle.lower() in lowered for needle in needles)
+
+
 async def crawl_source(
     client: httpx.AsyncClient,
     source: Source,
     *,
     skip_detail_ids: set[str] | None = None,
+    title_contains_any: list[str] | None = None,
     sleep: SleepFn = asyncio.sleep,
 ) -> list[CrawledItem]:
     skip = skip_detail_ids or set()
+    needles = title_contains_any or []
     try:
         found_items = await _found_items(client, source, sleep=sleep)
     except RequestFailed as exc:
@@ -126,6 +136,7 @@ async def crawl_source(
     crawled: list[CrawledItem | None] = []
     pending: list[tuple[int, dict[str, str]]] = []
     detail_count = 0
+    dropped_titles = 0
     for item in found_items:
         position_id = f"{source.id}:{item['id']}"
         if position_id in seen:
@@ -133,6 +144,9 @@ async def crawl_source(
             continue
         seen.add(position_id)
         title = item.get("title") or ""
+        if not title_matches_any(title, needles):
+            dropped_titles += 1
+            continue
         url = item.get("url") or ""
         if source.detail_request is None:
             crawled.append(
@@ -189,6 +203,13 @@ async def crawl_source(
                 description=description,
                 skipped_detail=False,
             )
+    if dropped_titles:
+        logger.info(
+            "source %s: skipped %s positions; title did not contain any of %s",
+            source.id,
+            dropped_titles,
+            needles,
+        )
     return [row for row in crawled if row is not None]
 
 
@@ -197,13 +218,18 @@ async def crawl_all(
     sources: list[Source],
     *,
     skip_detail_ids: set[str] | None = None,
+    title_contains_any: list[str] | None = None,
     sleep: SleepFn = asyncio.sleep,
 ) -> list[CrawledItem]:
     items: list[CrawledItem] = []
     seen: set[str] = set()
     for source in sources:
         batch = await crawl_source(
-            client, source, skip_detail_ids=skip_detail_ids, sleep=sleep
+            client,
+            source,
+            skip_detail_ids=skip_detail_ids,
+            title_contains_any=title_contains_any,
+            sleep=sleep,
         )
         for item in batch:
             if item.id in seen:

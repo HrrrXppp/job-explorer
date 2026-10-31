@@ -10,6 +10,7 @@
     "model": "sentence-transformers/all-MiniLM-L6-v2"
   },
   "reports_dir": "reports",
+  "title_contains_any": ["Engineer", "Developer"],
   "email": {
     "to": [
       "hrrrxppp@gmail.com"
