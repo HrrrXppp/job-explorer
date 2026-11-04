@@ -72,6 +72,7 @@ async def run_explorer(
             http_client,
             config.sources,
             skip_detail_ids=skip_ids,
+            title_contains_any=config.title_contains_any,
             sleep=sleep or asyncio.sleep,
         )
     finally:

@@ -47,6 +47,8 @@ load config + env
   -> read last seven JSON reports in reports_dir and merge (empty if none)
   -> hash each resume file (SHA-256); compare to newest JSON fingerprints
   -> for each source: search HTTP -> parse items
+  -> drop titles that contain none of `title_contains_any` (case-insensitive;
+     omitted or empty list keeps every title)
   -> detail HTTP only when required (see skip rule) -> match those
   -> split new vs previous; sort each group by match % desc
   -> write HTML report + JSON state with UTC date-time filenames

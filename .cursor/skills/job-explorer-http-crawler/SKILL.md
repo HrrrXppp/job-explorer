@@ -52,6 +52,16 @@ Each element of `config.json` `"sources"`:
 Position identity: `{source_id}:{item.id}` (string). Required extract field:
 `id`. Recommended: `title`, `url`.
 
+Optional top-level `title_contains_any` is a list of substrings. After extract,
+a position is processed only when its `title` contains any list entry,
+compared case-insensitively (`Engineer` matches `ENGINEER` and `engineer`).
+Titles that miss every entry are dropped before detail HTTP and matching.
+Omit the key, or use `[]`, to keep every title. Example:
+
+```json
+"title_contains_any": ["Engineer", "Developer"]
+```
+
 ## Search request
 
 - `method`: GET or POST.
