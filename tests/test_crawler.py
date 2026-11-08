@@ -434,3 +434,27 @@ def test_description_strips_html_in_json() -> None:
 def test_description_field_from_detail_html() -> None:
     html = "<html><div class='desc'>Hello <b>world</b></div></html>"
     assert "Hello" in extract_description(html, "div.desc", kind="html")
+
+
+def test_description_from_json_ld_script() -> None:
+    html = '''<html><body>
+    <script id="jobDetailStructuredData" type="application/ld+json">
+    {"@context":"https://schema.org/","@type":"JobPosting","title":"Senior Python Developer","description":"<strong>Description:</strong> This is a test job"}
+    </script>
+    </body></html>'''
+    result = extract_description(html, "#jobDetailStructuredData", kind="html")
+    assert "Description:" in result
+    assert "test job" in result
+    assert "<strong>" not in result
+
+
+def test_description_from_json_ld_script_with_escaped_html() -> None:
+    html = '''<html><body>
+    <script id="jobDetailStructuredData" type="application/ld+json">
+    {"@context":"https://schema.org/","@type":"JobPosting","title":"Senior Python Developer","description":"\\u003cstrong\\u003eDescription:\\u003c/strong\\u003e Some text"}
+    </script>
+    </body></html>'''
+    result = extract_description(html, "#jobDetailStructuredData", kind="html")
+    assert "Description:" in result
+    assert "Some text" in result
+    assert "\\u003c" not in result

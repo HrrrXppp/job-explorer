@@ -389,7 +389,16 @@ def extract_description(
     if target is None:
         return ""
     if attr == "text":
-        return html_to_text(target.get_text("\n", strip=True))
+        text = target.get_text("\n", strip=True)
+        if target.name == "script" and target.get("type") == "application/ld+json":
+            try:
+                data = json.loads(text)
+                desc_value = jsonpath_one(data, "description")
+                if desc_value is not None:
+                    text = stringify(desc_value)
+            except (json.JSONDecodeError, ValueError):
+                pass
+        return html_to_text(text)
     value = target.get(attr) or ""
     if isinstance(value, list):
         value = " ".join(str(part) for part in value)
