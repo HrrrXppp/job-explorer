@@ -1,0 +1,193 @@
+from __future__ import annotations
+
+import json
+from pathlib import Path
+
+import pytest
+
+from job_explorer.config import ConfigError, load_config, parse_config
+
+EXAMPLE = Path(__file__).resolve().parents[1] / "config.example.json"
+
+
+def test_example_config_loads_with_env() -> None:
+    raw = json.loads(EXAMPLE.read_text(encoding="utf-8"))
+    config = load_config(EXAMPLE, env={"API_TOKEN": "secret-token"})
+    source = config.sources[0]
+    search = raw["sources"][0]["search_request"]
+    items = raw["sources"][0]["items"]
+    detail = raw["sources"][0]["detail_request"]
+    assert config.user_agent == raw["user_agent"]
+    assert config.resumes[0].id == raw["resumes"][0]["id"]
+    assert config.resumes[0].path.endswith(raw["resumes"][0]["path"])
+    assert config.matching.model == raw["matching"]["model"]
+    assert config.email.to == raw["email"]["to"]
+    assert config.reports_dir == raw.get("reports_dir", "reports")
+    assert config.title_contains_any == ["Engineer", "Developer"]
+    assert source.id == raw["sources"][0]["id"]
+    assert source.search_request.method == search["method"]
+    assert source.search_request.url == search["url"]
+    assert source.search_request.query == search["query"]
+    assert source.search_request.headers["Accept"] == search["headers"]["Accept"]
+    assert source.search_request.headers["Authorization"] == "Bearer secret-token"
+    assert source.items.kind == items["kind"]
+    assert source.items.list == items["list"]
+    assert source.items.fields == items["fields"]
+    assert source.detail_request is not None
+    assert source.detail_request.request.method == detail["method"]
+    assert source.detail_request.request.url == detail["url"]
+    assert source.detail_request.request.headers == detail["headers"]
+    assert source.detail_request.description == detail["description"]
+
+
+def test_missing_env_var_fails() -> None:
+    with pytest.raises(ConfigError, match="API_TOKEN"):
+        load_config(EXAMPLE, env={})
+
+
+def test_missing_resumes_fails() -> None:
+    with pytest.raises(ConfigError, match="resumes"):
+        parse_config({"sources": [{"id": "x"}]}, config_dir=".")
+
+
+def test_user_agent_required_non_empty() -> None:
+    raw = json.loads(EXAMPLE.read_text())
+    raw["user_agent"] = "   "
+    with pytest.raises(ConfigError, match="user_agent"):
+        parse_config(raw, config_dir=".")
+
+
+def test_default_user_agent_when_omitted() -> None:
+    raw = json.loads(EXAMPLE.read_text())
+    del raw["user_agent"]
+    config = parse_config(raw, config_dir="/tmp")
+    assert config.user_agent == "job-explorer/0.1"
+
+
+OPERATOR = Path(__file__).resolve().parents[1] / "config.json"
+
+
+def test_operator_config_limits_remote_search_to_united_states() -> None:
+    raw = json.loads(OPERATOR.read_text(encoding="utf-8"))
+    config = parse_config(raw, config_dir=".")
+    by_id = {source.id: source for source in config.sources}
+    assert config.reports_dir == "reports"
+    assert config.title_contains_any == ["Engineer", "Developer"]
+    assert "worldwide" not in by_id["himalayas"].search_request.query
+    assert by_id["himalayas"].search_request.query["country"] == "US"
+    assert by_id["jobicy"].search_request.query["geo"] == "usa"
+    assert by_id["4dayweek"].search_request.query["country"] == "United States"
+    assert "locations:USA" in by_id["workingnomads"].search_request.body["query"]["query_string"]["query"]
+    assert by_id["remotive"].items.keep_if is not None
+    assert by_id["remoteok"].items.keep_if is not None
+    assert by_id["netflix"].search_request.query["location"] == "USA - Remote"
+    assert by_id["netflix"].search_request.query["query"] == "python"
+    assert "2fcb99c455831013ea52fb338f2932d8" in by_id["nvidia"].search_request.body["appliedFacets"]["locationHierarchy1"]
+    assert isinstance(by_id["stripe"].items.keep_if, list)
+    assert by_id["simplyhired"].search_request.query == {"q": "python", "l": "19707", "mi": "50"}
+    assert by_id["simplyhired_remote"].search_request.query == {"q": "python", "l": "Remote"}
+    assert by_id["dice"].search_request.query["location"] == "19707"
+    assert by_id["dice"].search_request.query["radius"] == "50"
+    assert by_id["dice_remote"].search_request.query["workplaceTypes"] == "Remote"
+    assert by_id["talent"].search_request.query == {"k": "python", "l": "19707", "radius": "50"}
+    assert by_id["talent_remote"].items.keep_if is not None
+    assert "Remote" in by_id["talent_remote"].items.keep_if.contains_any
+    assert "title" in by_id["talent_remote"].items.keep_if.fields
+    assert by_id["jobot"].search_request.body == {"query": "python", "location": "19707"}
+    assert by_id["jobot"].search_request.url == "https://jobot-com-api.jobot.net/rest/jobs/search"
+    assert by_id["jobot_remote"].search_request.body == {"query": "python", "commuteType": "remote"}
+    assert by_id["cybercoders"].search_request.query == {
+        "keyword": "python",
+        "locationKeyword": "Hockessin, Delaware",
+        "location": "39.7876,-75.6966",
+        "miles": "60",
+        "buid": "1",
+        "rows": "20",
+        "page": "1",
+    }
+    assert by_id["cybercoders_remote"].search_request.query["workLocationTypeId"] == "3"
+    assert by_id["cybercoders_remote"].search_request.query["keyword"] == "python"
+    assert by_id["teksystems"].search_request.body["keywords"] == "python"
+    assert by_id["teksystems"].search_request.body["selected_fields"]["state"] == [
+        "Delaware",
+        "Pennsylvania",
+        "Maryland",
+        "New Jersey",
+    ]
+    assert "Philadelphia" in by_id["teksystems"].search_request.body["selected_fields"]["city"]
+    assert by_id["teksystems_remote"].search_request.body["selected_fields"]["remoteOnsite"] == [
+        "Remote"
+    ]
+    assert by_id["vanguard"].search_request.body["searchText"] == "Python"
+    assert "b9f1251c6ce51052658919a6dcd898d1" in by_id["vanguard"].search_request.body["appliedFacets"]["locations"]
+    assert by_id["comcast"].search_request.body["appliedFacets"]["locations"]
+    assert "38d640cf23a8018e1b28496e7f273239" in by_id["comcast"].search_request.body["appliedFacets"]["locations"]
+    assert "247bad0b5244013e714617da39329502" in by_id["comcast_remote"].search_request.body["appliedFacets"]["locations"]
+    assert by_id["cencora"].search_request.body["keywords"] == "python"
+    assert "Conshohocken" in by_id["cencora"].search_request.body["selected_fields"]["city"]
+    assert by_id["cencora_remote"].search_request.body["selected_fields"]["city"] == ["Remote"]
+    assert "United States" in by_id["cencora_remote"].items.keep_if.contains_any
+    assert by_id["gsk"].search_request.body["searchText"] == "Python"
+    assert "90793f76afe70136bdc7d0ebdf14c8bb" in by_id["gsk"].search_request.body["appliedFacets"]["locations"]
+    assert by_id["affirm"].search_request.url == "https://boards-api.greenhouse.io/v1/boards/affirm/jobs"
+    assert by_id["affirm"].search_request.query["content"] == "true"
+    assert isinstance(by_id["affirm"].items.keep_if, list)
+    assert "19707" in by_id["affirm"].items.keep_if[1].contains_any
+    assert "Philadelphia" in by_id["affirm"].items.keep_if[1].contains_any
+    assert "Remote US" not in by_id["affirm"].items.keep_if[1].contains_any
+    assert by_id["pnc"].search_request.url == "https://careers.pnc.com/widgets"
+    assert by_id["pnc"].search_request.body["keywords"] == "python"
+    assert by_id["pnc"].search_request.body["refNum"] == "PNC1GLOBAL"
+    assert by_id["pnc"].search_request.body["selected_fields"]["city"] == [
+        "Philadelphia",
+        "Wilmington",
+    ]
+    assert "Philadelphia" in by_id["pnc"].items.keep_if.contains_any
+    assert "Wilmington" in by_id["pnc"].items.keep_if.contains_any
+    assert by_id["td"].search_request.body["searchText"] == "Python"
+    assert "dafbf576c2d210009455f92c07850000" in by_id["td"].search_request.body["appliedFacets"][
+        "locations"
+    ]
+    assert "dafbf576c2d210009452aad5856b0000" in by_id["td"].search_request.body["appliedFacets"][
+        "locations"
+    ]
+    assert "pnc_remote" not in by_id
+    assert "td_remote" not in by_id
+    assert by_id["samsara_remote"].search_request.url == (
+        "https://boards-api.greenhouse.io/v1/boards/samsara/jobs"
+    )
+    assert by_id["samsara_remote"].search_request.query["content"] == "true"
+    assert isinstance(by_id["samsara_remote"].items.keep_if, list)
+    assert "python" in by_id["samsara_remote"].items.keep_if[0].contains_any
+    assert "Remote - US" in by_id["samsara_remote"].items.keep_if[1].contains_any
+    assert "Remote - PA" in by_id["samsara_remote"].items.keep_if[1].contains_any
+    assert "Remote - Canada" not in by_id["samsara_remote"].items.keep_if[1].contains_any
+    assert "samsara" not in by_id
+    assert by_id["pwc"].search_request.body["searchText"] == "Python"
+    assert "e57e6863118d0164aff63580342bb3bd" in by_id["pwc"].search_request.body["appliedFacets"]["locations"]
+    assert "9f1721f94147019a708758d4ab071799" in by_id["pwc_remote"].search_request.body["appliedFacets"]["locations"]
+    assert "CX_2001" in by_id["chubb"].search_request.query["finder"]
+    assert "latitude=39.7876" in by_id["chubb"].search_request.query["finder"]
+    assert "radius=50" in by_id["chubb"].search_request.query["finder"]
+    assert by_id["cigna"].search_request.body["keywords"] == "python"
+    assert by_id["cigna"].search_request.body["refNum"] == "CIGNUS"
+    assert by_id["cigna"].search_request.body["selected_fields"]["city"] == ["Philadelphia"]
+    assert by_id["cigna_remote"].search_request.body["selected_fields"]["city"] == ["Remote"]
+    assert "United States" in by_id["cigna_remote"].items.keep_if.contains_any
+    assert "89aa261a3abf01b693565127672ca168" in by_id["travelers"].search_request.body["appliedFacets"]["locations"]
+    assert "ada8d448ea9f01a94f1ce6700c6b7c4a" in by_id["aig"].search_request.body["appliedFacets"]["locations"]
+    assert "bf1cc5a85e0b100275767c808c750000" in by_id["allstate_remote"].search_request.body["appliedFacets"]["locations"]
+    assert "chubb_remote" not in by_id
+    assert "travelers_remote" not in by_id
+    assert "aig_remote" not in by_id
+    assert "allstate" not in by_id
+    assert by_id["ford_remote"].search_request.url == "https://www.careers.ford.com/search-jobs/resultspost"
+    assert by_id["ford_remote"].search_request.body["Keywords"] == "python"
+    assert by_id["ford_remote"].search_request.body["FacetFilters"][0]["Display"] == "Remote"
+    assert by_id["ford_remote"].search_request.body["FacetFilters"][0]["ID"] == "1000000000100"
+    assert by_id["gm_remote"].search_request.body["searchText"] == "Python"
+    assert "e30192a1b9ad01f018f447afb61fec4c" in by_id["gm_remote"].search_request.body["appliedFacets"]["locations"]
+    assert "ford" not in by_id
+    assert "gm" not in by_id
+    assert "caterpillar" not in by_id
+    assert "caterpillar_remote" not in by_id
