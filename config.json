@@ -2898,6 +2898,223 @@
         },
         "description": "$.jobPostingInfo.jobDescription"
       }
+    },
+    {
+      "id": "city_national",
+      "search_request": {
+        "method": "GET",
+        "url": "https://careers.cnb.com/api/jobs",
+        "headers": {
+          "Accept": "application/json"
+        },
+        "query": {
+          "keywords": "Python",
+          "limit": "100",
+          "page": "1"
+        }
+      },
+      "items": {
+        "kind": "json",
+        "list": "$.jobs",
+        "fields": {
+          "id": "data.req_id",
+          "title": "data.title",
+          "description": "data.description",
+          "location": "data.full_location"
+        },
+        "url_template": "https://careers.cnb.com/jobs/{id}",
+        "keep_if": {
+          "fields": [
+            "location"
+          ],
+          "contains_any": [
+            "Newark, Delaware",
+            "Wilmington, Delaware"
+          ]
+        }
+      }
+    },
+    {
+      "id": "ledgebrook_remote",
+      "search_request": {
+        "method": "GET",
+        "url": "https://api.careerpuck.com/v1/public/job-boards/ledgebrook",
+        "headers": {
+          "Accept": "application/json"
+        }
+      },
+      "items": {
+        "kind": "json",
+        "list": "$.jobs",
+        "fields": {
+          "id": "permalink",
+          "title": "title",
+          "url": "publicUrl",
+          "description": "content",
+          "location": "location"
+        },
+        "keep_if": [
+          {
+            "fields": [
+              "title",
+              "description"
+            ],
+            "contains_any": [
+              "python"
+            ]
+          },
+          {
+            "fields": [
+              "location"
+            ],
+            "contains_any": [
+              "Remote - US"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "coinbase_remote",
+      "search_request": {
+        "method": "GET",
+        "url": "https://boards-api.greenhouse.io/v1/boards/coinbase/jobs",
+        "headers": {
+          "Accept": "application/json"
+        },
+        "query": {
+          "content": "true"
+        }
+      },
+      "items": {
+        "kind": "json",
+        "list": "$.jobs",
+        "fields": {
+          "id": "id",
+          "title": "title",
+          "url": "absolute_url",
+          "description": "content",
+          "location": "location.name"
+        },
+        "keep_if": [
+          {
+            "fields": [
+              "title",
+              "description"
+            ],
+            "contains_any": [
+              "python"
+            ]
+          },
+          {
+            "fields": [
+              "location"
+            ],
+            "contains_any": [
+              "Remote - USA"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "honeycomb_remote",
+      "search_request": {
+        "method": "GET",
+        "url": "https://boards-api.greenhouse.io/v1/boards/honeycomb/jobs",
+        "headers": {
+          "Accept": "application/json"
+        },
+        "query": {
+          "content": "true"
+        }
+      },
+      "items": {
+        "kind": "json",
+        "list": "$.jobs",
+        "fields": {
+          "id": "id",
+          "title": "title",
+          "url": "absolute_url",
+          "description": "content",
+          "location": "location.name"
+        },
+        "keep_if": [
+          {
+            "fields": [
+              "title",
+              "description"
+            ],
+            "contains_any": [
+              "python"
+            ]
+          },
+          {
+            "fields": [
+              "location"
+            ],
+            "contains_any": [
+              "Remote - United States"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "delaware_joblink",
+      "search_request": {
+        "method": "GET",
+        "url": "https://joblink.delaware.gov/search/jobs",
+        "headers": {
+          "Accept": "text/html",
+          "Cookie": "_session_id=jobexplorer"
+        },
+        "query": {
+          "search_job_search[keywords]": "Python",
+          "search_job_search[job_location_state]": "Delaware",
+          "per_page": "50"
+        }
+      },
+      "items": {
+        "kind": "html",
+        "list": "article.card.card--data",
+        "fields": {
+          "id": "h4.card__title a@href",
+          "title": "h4.card__title a",
+          "url": "h4.card__title a@href",
+          "location": "p.card-metadata--job-employer",
+          "snippet": "div.card__body"
+        },
+        "keep_if": [
+          {
+            "fields": [
+              "title",
+              "snippet"
+            ],
+            "contains_any": [
+              "python"
+            ]
+          },
+          {
+            "fields": [
+              "location"
+            ],
+            "contains_any": [
+              "Delaware"
+            ]
+          }
+        ]
+      },
+      "detail_request": {
+        "method": "GET",
+        "url": "https://joblink.delaware.gov{id}",
+        "headers": {
+          "Accept": "text/html",
+          "Cookie": "_session_id=jobexplorer"
+        },
+        "description": "#primaryContent"
+      },
+      "max_detail_requests": 50
     }
   ]
 }
