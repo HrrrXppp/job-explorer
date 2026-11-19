@@ -189,5 +189,37 @@ def test_operator_config_limits_remote_search_to_united_states() -> None:
     assert "e30192a1b9ad01f018f447afb61fec4c" in by_id["gm_remote"].search_request.body["appliedFacets"]["locations"]
     assert "ford" not in by_id
     assert "gm" not in by_id
+    assert by_id["city_national"].search_request.url == "https://careers.cnb.com/api/jobs"
+    assert by_id["city_national"].search_request.query["keywords"] == "Python"
+    assert by_id["city_national"].items.url_template == "https://careers.cnb.com/jobs/{id}"
+    assert "Newark, Delaware" in by_id["city_national"].items.keep_if.contains_any
+    assert "Wilmington, Delaware" in by_id["city_national"].items.keep_if.contains_any
+    assert "city_national_remote" not in by_id
+    assert by_id["ledgebrook_remote"].search_request.url == (
+        "https://api.careerpuck.com/v1/public/job-boards/ledgebrook"
+    )
+    assert "Remote - US" in by_id["ledgebrook_remote"].items.keep_if[1].contains_any
+    assert "ledgebrook" not in by_id
+    assert by_id["coinbase_remote"].search_request.url == (
+        "https://boards-api.greenhouse.io/v1/boards/coinbase/jobs"
+    )
+    assert by_id["coinbase_remote"].items.keep_if[1].contains_any == ["Remote - USA"]
+    assert "coinbase" not in by_id
+    assert by_id["honeycomb_remote"].search_request.url == (
+        "https://boards-api.greenhouse.io/v1/boards/honeycomb/jobs"
+    )
+    assert by_id["honeycomb_remote"].items.keep_if[1].contains_any == ["Remote - United States"]
+    assert "honeycomb" not in by_id
+    assert by_id["delaware_joblink"].search_request.query["search_job_search[keywords]"] == "Python"
+    assert by_id["delaware_joblink"].search_request.query["search_job_search[job_location_state]"] == (
+        "Delaware"
+    )
+    assert by_id["delaware_joblink"].search_request.headers["Cookie"] == "_session_id=jobexplorer"
+    assert by_id["delaware_joblink"].detail_request is not None
+    assert by_id["delaware_joblink"].detail_request.request.url == (
+        "https://joblink.delaware.gov{id}"
+    )
+    assert "Delaware" in by_id["delaware_joblink"].items.keep_if[1].contains_any
+    assert "delaware_joblink_remote" not in by_id
     assert "caterpillar" not in by_id
     assert "caterpillar_remote" not in by_id
